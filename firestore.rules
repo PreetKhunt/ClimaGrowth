@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      // Only the authenticated user can read/write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Soil Data ─────────────────────────────────────────────────────────────
+    match /soilData/{docId} {
+      allow read: if request.auth != null
+                  && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null
+                             && resource.data.uid == request.auth.uid;
+    }
+
+    // ── Weather Cache (shared read, admin write) ───────────────────────────
+    match /weatherCache/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // populated by Cloud Functions only
+    }
+
+    // ── Alerts (public read within app, admin write) ───────────────────────
+    match /alerts/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // populated by admin/Cloud Functions only
+    }
+
+    // ── Chat History ──────────────────────────────────────────────────────────
+    match /chatHistory/{docId} {
+      allow read: if request.auth != null
+                  && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ── Market Prices (read-only for authenticated users) ─────────────────
+    match /marketPrices/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ── Government Schemes (read-only) ────────────────────────────────────
+    match /schemes/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ── Feedback ──────────────────────────────────────────────────────────────
+    match /feedback/{docId} {
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+  }
+}

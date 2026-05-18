@@ -1,0 +1,57 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio / IntelliJ
+android/
+!android/app/
+!android/build.gradle
+!android/settings.gradle
+!android/gradle.properties
+
+# iOS
+ios/
+!ios/Runner/
+!ios/Podfile
+
+# Firebase secrets — NEVER commit these
+google-services.json
+GoogleService-Info.plist
+lib/firebase_options.dart
+
+# API keys
+lib/utils/constants.dart
+
+# Sensitive local config
+local.properties
+*.env

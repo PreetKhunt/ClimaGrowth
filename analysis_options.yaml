@@ -1,0 +1,38 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Style
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_locals
+    - unnecessary_const
+    - unnecessary_new
+    - avoid_unnecessary_containers
+    - sized_box_for_whitespace
+    - use_super_parameters
+    - use_colored_box
+
+    # Safety
+    - avoid_print
+    - avoid_dynamic_calls
+    - cancel_subscriptions
+    - close_sinks
+    - unawaited_futures
+
+    # Imports
+    - directives_ordering
+    - avoid_relative_lib_imports
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - lib/firebase_options.dart
+  errors:
+    # Treat missing returns as errors
+    missing_return: error
+    # Unused imports are warnings
+    unused_import: warning
+    # Dead code is info only
+    dead_code: info
