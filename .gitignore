@@ -24,6 +24,7 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+.packages
 /build/
 
 # Symbolication related
@@ -31,6 +32,13 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Dart2JS / web compiled output
+*.dart.js
+*.info.json
+*.js_
+*.js.deps
+*.js.map
 
 # Android Studio / IntelliJ
 android/
