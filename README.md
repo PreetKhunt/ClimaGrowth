@@ -209,7 +209,7 @@ An orange banner appears when the app detects no internet connection.
 
 ---
 
-## Contact
+## Developer
 
 **Project**: ClimaGrowth  
 **Made by**: Preet 😊
