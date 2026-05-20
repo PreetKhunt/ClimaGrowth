@@ -212,7 +212,5 @@ An orange banner appears when the app detects no internet connection.
 ## Contact
 
 **Project**: ClimaGrowth  
-**Contact**: Vanshika Mathur  
-**Phone**: +91 96424 21234  
-**Pilot Region**: Padra, Gujarat, India  
+**Made by**: Preet 😊
 **Version**: 1.0.0 | May 2026
