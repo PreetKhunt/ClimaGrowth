@@ -264,8 +264,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       children: [
                         Container(
                           width: 38, height: 38,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [kAmber, kIndigo]),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(colors: [kAmber, kIndigo]),
                             shape: BoxShape.circle,
                           ),
                           child: Center(

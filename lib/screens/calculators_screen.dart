@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+
 import '../utils/constants.dart';
-import '../widgets/glass_card.dart';
-import 'calculators/calc_water_requirement.dart';
+import 'calculators/calc_crop_insurance.dart';
 import 'calculators/calc_fertilizer.dart';
-import 'calculators/calc_profit_margin.dart';
-import 'calculators/calc_loan_emi.dart';
 import 'calculators/calc_land_area.dart';
-import 'calculators/calc_seed_quantity.dart';
-import 'calculators/calc_yield_prediction.dart';
+import 'calculators/calc_loan_emi.dart';
 import 'calculators/calc_pesticide_dosage.dart';
+import 'calculators/calc_profit_margin.dart';
+import 'calculators/calc_seed_quantity.dart';
 import 'calculators/calc_soil_moisture.dart';
 import 'calculators/calc_solar_pump.dart';
-import 'calculators/calc_crop_insurance.dart';
 import 'calculators/calc_storage_transport.dart';
+import 'calculators/calc_water_requirement.dart';
+import 'calculators/calc_yield_prediction.dart';
 
 class CalculatorsScreen extends StatefulWidget {
   const CalculatorsScreen({super.key});
@@ -183,18 +183,11 @@ class _CalculatorsScreenState extends State<CalculatorsScreen>
       ),
     ];
 
-    return Padding(
+    return ListView.separated(
       padding: const EdgeInsets.all(kPadding),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: calculators.length,
-        itemBuilder: (_, i) => calculators[i],
-      ),
+      itemCount: calculators.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) => calculators[i],
     );
   }
 
@@ -239,39 +232,63 @@ class _CalcCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: kAmber.withAlpha(25),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: kAmber, size: 22),
+        child: Container(
+          height: 92,
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: cs.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(6),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: kAmber.withAlpha(25),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.labelLarge,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Icon(icon, color: kAmber, size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                          color: cs.onSurfaceVariant, fontSize: 12),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: cs.onSurfaceVariant, size: 20),
+              const SizedBox(width: 12),
+            ],
           ),
         ),
       ),

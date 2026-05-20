@@ -5,7 +5,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../utils/constants.dart';
 
-/// 36px navy outlined secondary button with hand cursor and scale animation.
 class SecondaryButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -65,6 +64,7 @@ class _SecondaryButtonState extends State<SecondaryButton>
 
   @override
   Widget build(BuildContext context) {
+    final secondary = Theme.of(context).colorScheme.secondary;
     final arrowIcon = widget.arrowUpRight
         ? PhosphorIcons.arrowUpRight()
         : PhosphorIcons.arrowRight();
@@ -83,8 +83,8 @@ class _SecondaryButtonState extends State<SecondaryButton>
               duration: kAnimFast,
               height: 36,
               decoration: BoxDecoration(
-                color: _pressed ? kIndigoLight : Colors.transparent,
-                border: Border.all(color: kIndigo, width: 1.5),
+                color: _pressed ? secondary.withAlpha(30) : Colors.transparent,
+                border: Border.all(color: secondary, width: 1.5),
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -92,7 +92,7 @@ class _SecondaryButtonState extends State<SecondaryButton>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.icon != null) ...[
-                    PhosphorIcon(widget.icon!, size: 18, color: kIndigo),
+                    PhosphorIcon(widget.icon!, size: 18, color: secondary),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
@@ -102,13 +102,13 @@ class _SecondaryButtonState extends State<SecondaryButton>
                       style: GoogleFonts.dmSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: kIndigo,
+                        color: secondary,
                       ),
                     ),
                   ),
                   Transform.translate(
                     offset: Offset(_arrowX.value, 0),
-                    child: PhosphorIcon(arrowIcon, size: 18, color: kIndigo),
+                    child: PhosphorIcon(arrowIcon, size: 18, color: secondary),
                   ),
                 ],
               ),

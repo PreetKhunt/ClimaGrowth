@@ -18,8 +18,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   String? _error;
 
   // Hardcoded admin credentials for demo
-  static const _adminEmail = 'admin@climagrowth.in';
-  static const _adminPass = 'Admin@123';
+  static const _adminEmail = 'khuntpreet12@gmail.com';
+  static const _adminPass = 'Preet12.!';
 
   @override
   void dispose() {

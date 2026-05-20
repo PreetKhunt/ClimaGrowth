@@ -154,7 +154,7 @@ class _UIDesignerScreenState extends State<UIDesignerScreen>
               const SizedBox(width: 6),
               Container(
                 width: 8, height: 8,
-                decoration: BoxDecoration(color: kAmber, shape: BoxShape.circle),
+                decoration: const BoxDecoration(color: kAmber, shape: BoxShape.circle),
               ),
             ],
           ],
@@ -214,7 +214,7 @@ class _UIDesignerScreenState extends State<UIDesignerScreen>
         children: [
           _buildPresetStrip(),
           _buildPreview(),
-          Container(
+          ColoredBox(
             color: Theme.of(context).colorScheme.surface,
             child: TabBar(
               controller: _tabCtrl,
@@ -255,7 +255,7 @@ class _UIDesignerScreenState extends State<UIDesignerScreen>
   Widget _buildPresetStrip() {
     return Container(
       height: 52,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: kBorder)),
       ),
       child: ListView.separated(
@@ -363,7 +363,7 @@ class _UIDesignerScreenState extends State<UIDesignerScreen>
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Row(children: [
-                        Column(crossAxisAlignment: CrossAxisAlignment.start,
+                        const Column(crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text('Good morning', style: TextStyle(color: Colors.white70, fontSize: 8)),

@@ -3,9 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../utils/constants.dart';
-
-/// 40px terracotta gradient primary CTA button with hand cursor and scale animation.
 class PrimaryButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -69,6 +66,8 @@ class _PrimaryButtonState extends State<PrimaryButton>
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final surface = Theme.of(context).colorScheme.surfaceContainerHighest;
     return MouseRegion(
       cursor: _active ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
@@ -83,18 +82,18 @@ class _PrimaryButtonState extends State<PrimaryButton>
               height: 40,
               decoration: BoxDecoration(
                 gradient: _active
-                    ? const LinearGradient(
-                        colors: kButtonGradient,
+                    ? LinearGradient(
+                        colors: [primary, primary.withAlpha(200)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       )
                     : null,
-                color: _active ? null : kBgTertiary,
+                color: _active ? null : surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: _active
                     ? [
                         BoxShadow(
-                          color: kAmber.withAlpha(80),
+                          color: primary.withAlpha(80),
                           blurRadius: _shadow.value,
                           offset: const Offset(0, 4),
                         ),
@@ -128,7 +127,7 @@ class _PrimaryButtonState extends State<PrimaryButton>
                             style: GoogleFonts.dmSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _active ? Colors.white : kTextMuted,
+                              color: _active ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                   ),
@@ -138,7 +137,7 @@ class _PrimaryButtonState extends State<PrimaryButton>
                       child: PhosphorIcon(
                         PhosphorIcons.arrowRight(),
                         size: 16,
-                        color: _active ? Colors.white : kTextMuted,
+                        color: _active ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                 ],

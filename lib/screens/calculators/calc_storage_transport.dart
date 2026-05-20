@@ -96,7 +96,7 @@ class _StorageTransportCalcState extends State<StorageTransportCalc> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: crop,
+                    initialValue: crop,
                     onChanged: (v) => setState(() => crop = v ?? 'wheat'),
                     items: ['wheat', 'rice', 'cotton', 'groundnut']
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -132,13 +132,13 @@ class _StorageTransportCalcState extends State<StorageTransportCalc> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: storageType,
+                    initialValue: storageType,
                     onChanged: (v) =>
                         setState(() => storageType = v ?? 'warehouse'),
-                    items: [
-                      const DropdownMenuItem(
+                    items: const [
+                      DropdownMenuItem(
                           value: 'warehouse', child: Text('Warehouse – ₹5/qtl/mo')),
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                           value: 'cold_storage',
                           child: Text('Cold Storage – ₹8/qtl/mo')),
                     ],

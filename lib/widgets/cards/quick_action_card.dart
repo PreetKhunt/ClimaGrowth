@@ -55,9 +55,9 @@ class _QuickActionCardState extends State<QuickActionCard> {
             height: 88,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0x121A1A1A)),
+              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(_hovered ? 18 : 7),
@@ -90,7 +90,7 @@ class _QuickActionCardState extends State<QuickActionCard> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A),
+                          color: Theme.of(context).colorScheme.onSurface,
                           height: 1.2,
                         ),
                       ),
@@ -100,7 +100,7 @@ class _QuickActionCardState extends State<QuickActionCard> {
                         style: GoogleFonts.dmSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF757575),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

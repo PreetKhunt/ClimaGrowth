@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../utils/constants.dart';
 
-/// 32×32 icon button with hand cursor, border, and terracotta press state.
 class IconActionButton extends StatefulWidget {
   final PhosphorIconData icon;
   final VoidCallback? onPressed;
@@ -38,6 +37,7 @@ class _IconActionButtonState extends State<IconActionButton>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
@@ -63,10 +63,10 @@ class _IconActionButtonState extends State<IconActionButton>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: _pressed ? kAmberLight : kBgSurface,
+                color: _pressed ? cs.primary.withAlpha(30) : cs.surface,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _pressed ? kAmber.withAlpha(100) : kBorder,
+                  color: _pressed ? cs.primary.withAlpha(100) : cs.outlineVariant,
                 ),
               ),
               child: Center(
@@ -74,8 +74,8 @@ class _IconActionButtonState extends State<IconActionButton>
                   widget.icon,
                   size: 16,
                   color: _pressed
-                      ? kAmberDark
-                      : (widget.iconColor ?? kTextPrimary),
+                      ? cs.primary
+                      : (widget.iconColor ?? cs.onSurface),
                 ),
               ),
             ),

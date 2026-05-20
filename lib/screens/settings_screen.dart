@@ -73,6 +73,27 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ]),
                       const SizedBox(height: 16),
+                      _sectionLabel('AI ASSISTANT'),
+                      _glassSection([
+                        _switchTile(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          label: 'Concise Responses',
+                          value: settings.conciseResponses,
+                          onChanged: (v) {
+                            HapticFeedback.lightImpact();
+                            settings.setConciseResponses(v);
+                          },
+                        ),
+                        _divider(),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                          child: Text(
+                            'ON: Short 1–3 sentence answers for simple questions.\nOFF: Allows detailed explanations (up to ~800 words).',
+                            style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 11),
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 16),
                       _sectionLabel('NOTIFICATIONS'),
                       _glassSection([
                         _switchTile(
@@ -234,27 +255,32 @@ class SettingsScreen extends StatelessWidget {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, color: kAmber, size: 20),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(label,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+    return Builder(
+      builder: (context) {
+        final primary = Theme.of(context).colorScheme.primary;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Icon(icon, color: primary, size: 20),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(label,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: primary,
+                activeTrackColor: primary.withAlpha(80),
+                inactiveThumbColor: Colors.white54,
+                inactiveTrackColor: Colors.white24,
+              ),
+            ],
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: kAmber,
-            activeTrackColor: kAmber.withAlpha(80),
-            inactiveThumbColor: Colors.white54,
-            inactiveTrackColor: Colors.white24,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -267,7 +293,7 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              const Icon(Icons.language_rounded, color: kAmber, size: 20),
+              Icon(Icons.language_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
               const SizedBox(width: 14),
               const Expanded(
                 child: Text('Language',
@@ -325,7 +351,7 @@ class SettingsScreen extends StatelessWidget {
                                   color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
                           const Spacer(),
                           if (settings.language == e.key)
-                            const Icon(Icons.check_rounded, color: kAmber, size: 20),
+                            Icon(Icons.check_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
                         ],
                       ),
                     ),

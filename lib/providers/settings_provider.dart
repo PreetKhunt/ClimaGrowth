@@ -4,6 +4,7 @@ import '../services/offline_cache_service.dart';
 class SettingsProvider extends ChangeNotifier {
   String _language = 'en';
   bool _darkMode = false;
+  bool _conciseResponses = true;
   Map<String, bool> _notifPrefs = {
     'weather_alerts': true,
     'irrigation_reminders': true,
@@ -13,12 +14,14 @@ class SettingsProvider extends ChangeNotifier {
 
   String get language => _language;
   bool get darkMode => _darkMode;
+  bool get conciseResponses => _conciseResponses;
   Map<String, bool> get notifPrefs => Map.unmodifiable(_notifPrefs);
   ThemeMode get themeMode => _darkMode ? ThemeMode.dark : ThemeMode.light;
 
   void loadFromCache() {
     _language = OfflineCacheService.getSetting('language', 'en') as String;
     _darkMode = OfflineCacheService.getSetting('darkMode', false) as bool;
+    _conciseResponses = OfflineCacheService.getSetting('concise_responses_enabled', true) as bool;
     _notifPrefs = {
       'weather_alerts': OfflineCacheService.getSetting('notif_weather', true) as bool,
       'irrigation_reminders': OfflineCacheService.getSetting('notif_irrigation', true) as bool,
@@ -43,6 +46,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setNotifPref(String key, bool v) async {
     _notifPrefs[key] = v;
     await OfflineCacheService.saveSettings('notif_$key', v);
+    notifyListeners();
+  }
+
+  Future<void> setConciseResponses(bool v) async {
+    _conciseResponses = v;
+    await OfflineCacheService.saveSettings('concise_responses_enabled', v);
     notifyListeners();
   }
 }

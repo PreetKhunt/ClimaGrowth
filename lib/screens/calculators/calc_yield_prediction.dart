@@ -108,7 +108,7 @@ class _YieldPredictionCalcState extends State<YieldPredictionCalc> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: crop,
+                    initialValue: crop,
                     onChanged: (v) => setState(() => crop = v ?? 'wheat'),
                     items: _baseYields.keys
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -133,7 +133,7 @@ class _YieldPredictionCalcState extends State<YieldPredictionCalc> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: soilHealth,
+                    initialValue: soilHealth,
                     onChanged: (v) =>
                         setState(() => soilHealth = v ?? 'good'),
                     items: ['poor', 'fair', 'good', 'excellent']
@@ -147,7 +147,7 @@ class _YieldPredictionCalcState extends State<YieldPredictionCalc> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: irrigationType,
+                    initialValue: irrigationType,
                     onChanged: (v) =>
                         setState(() => irrigationType = v ?? 'drip'),
                     items: ['flood', 'sprinkler', 'drip']

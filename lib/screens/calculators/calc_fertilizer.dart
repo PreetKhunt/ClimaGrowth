@@ -98,7 +98,7 @@ class _FertilizerCalcState extends State<FertilizerCalc> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: stage,
+                    initialValue: stage,
                     onChanged: (v) => setState(() => stage = v ?? 'vegetative'),
                     items: ['vegetative', 'flowering', 'fruiting']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))

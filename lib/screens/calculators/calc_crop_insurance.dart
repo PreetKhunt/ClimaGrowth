@@ -86,7 +86,7 @@ class _CropInsuranceCalcState extends State<CropInsuranceCalc> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: season,
+                    initialValue: season,
                     onChanged: (v) => setState(() => season = v ?? 'kharif'),
                     items: ['kharif', 'rabi']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -99,7 +99,7 @@ class _CropInsuranceCalcState extends State<CropInsuranceCalc> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: crop,
+                    initialValue: crop,
                     onChanged: (v) => setState(() => crop = v ?? 'rice'),
                     items: _siPerAcre.keys
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))

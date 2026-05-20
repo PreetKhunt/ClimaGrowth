@@ -5,11 +5,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../providers/air_quality_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/weather_provider.dart';
 import '../providers/soil_provider.dart';
 import '../providers/recommendations_provider.dart';
+import '../theme/dynamic_theme.dart';
 import '../utils/constants.dart';
+import 'calculators/calc_water_requirement.dart';
+import 'calculators/calc_fertilizer.dart';
+import 'calculators/calc_profit_margin.dart';
+import 'calculators/calc_loan_emi.dart';
+import 'calculators/calc_land_area.dart';
+import 'calculators/calc_seed_quantity.dart';
 import '../utils/formatters.dart';
 import '../widgets/buttons/icon_action_button.dart';
 import '../widgets/cards/quick_action_card.dart';
@@ -32,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       context.read<WeatherProvider>().fetch(kDefaultLat, kDefaultLon);
+      context.read<AirQualityProvider>().fetch(kDefaultLat, kDefaultLon);
       context.read<SoilProvider>().fetch(auth.user?.uid ?? 'guest');
       context.read<RecommendationsProvider>().loadCached();
     });
@@ -45,18 +54,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kBgPrimary,
       body: Stack(
         children: [
-          // Subtle ambient gradient bg
-          const Positioned.fill(
+          Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0.8, -0.8),
+                  center: const Alignment(0.8, -0.8),
                   radius: 0.9,
-                  colors: [Color(0x1AE55934), kBgPrimary],
+                  colors: [cs.primary.withAlpha(26), Theme.of(context).scaffoldBackgroundColor],
                 ),
               ),
             ),
@@ -80,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: _WeatherHeroCard(),
                       ),
                     ),
-                    SliverToBoxAdapter(
+                    const SliverToBoxAdapter(
                       child: _SectionTitle('Quick Actions'),
                     ),
                     SliverToBoxAdapter(
@@ -89,6 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             kPadding, 0, kPadding, 4),
                         child: _QuickActionsSection(),
                       ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: _SectionTitle('Smart Tools'),
+                    ),
+                    SliverToBoxAdapter(
+                      child: _SmartToolsSection(),
                     ),
                     const SliverToBoxAdapter(
                         child: _SectionTitle('Soil & Recommendations')),
@@ -128,8 +142,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         Navigator.pushNamed(context, '/soil');
       case 3:
-        Navigator.pushNamed(context, '/alerts');
+        Navigator.pushNamed(context, '/calculators');
       case 4:
+        Navigator.pushNamed(context, '/alerts');
+      case 5:
         Navigator.pushNamed(context, '/profile');
     }
   }
@@ -138,17 +154,11 @@ class _HomeScreenState extends State<HomeScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _QuickActionsSection extends StatelessWidget {
-  static const _accentColors = [
-    Color(0xFF4A90C2),
-    Color(0xFF6B8E5A),
-    Color(0xFF8E5572),
-    Color(0xFFD4A017),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final weather = context.watch<WeatherProvider>().weather;
     final soil = context.watch<SoilProvider>().soil;
+    final themeData = context.watch<DynamicThemeProvider>().data;
 
     final weatherSub = weather != null
         ? '${weather.temperature.toInt()}° · ${_conditionLabel(weather.condition)}'
@@ -158,10 +168,10 @@ class _QuickActionsSection extends StatelessWidget {
         : 'Checking soil…';
 
     final cards = [
-      (icon: PhosphorIcons.cloudSun(), title: 'Weather', subtitle: weatherSub, route: '/weather'),
-      (icon: PhosphorIcons.plant(), title: 'Soil', subtitle: soilSub, route: '/soil'),
-      (icon: PhosphorIcons.chatCircle(), title: 'AI Chat', subtitle: 'Ask anything', route: '/chat'),
-      (icon: PhosphorIcons.chartLine(), title: 'Market', subtitle: 'Live mandi prices', route: '/market'),
+      (icon: PhosphorIcons.cloudSun(), title: 'Weather', subtitle: weatherSub, route: '/weather', color: themeData.weatherAccent),
+      (icon: PhosphorIcons.plant(), title: 'Soil', subtitle: soilSub, route: '/soil', color: themeData.soilAccent),
+      (icon: PhosphorIcons.chatCircle(), title: 'AI Chat', subtitle: 'Ask anything', route: '/chat', color: themeData.chatAccent),
+      (icon: PhosphorIcons.chartLine(), title: 'Market', subtitle: 'Live mandi prices', route: '/market', color: themeData.marketAccent),
     ];
 
     return Column(
@@ -173,7 +183,7 @@ class _QuickActionsSection extends StatelessWidget {
             icon: c.icon,
             title: c.title,
             subtitle: c.subtitle,
-            iconColor: _accentColors[i],
+            iconColor: c.color,
             onTap: () => Navigator.pushNamed(context, c.route),
             index: i,
           ),
@@ -211,25 +221,28 @@ class _TopBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(kPadding, 8, kPadding, 0),
         child: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: kButtonGradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            Builder(builder: (ctx) {
+              final primary = Theme.of(ctx).colorScheme.primary;
+              return Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primary, primary.withAlpha(200)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: const Center(
-                child: Text('CG',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800)),
-              ),
-            ),
+                child: const Center(
+                  child: Text('CG',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800)),
+                ),
+              );
+            }),
             const Spacer(),
             IconActionButton(
               icon: PhosphorIcons.bell(),
@@ -265,7 +278,7 @@ class _GreetingHeader extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 28,
               fontWeight: FontWeight.w800,
-              color: kTextPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1, end: 0),
@@ -273,10 +286,10 @@ class _GreetingHeader extends StatelessWidget {
           Row(
             children: [
               PhosphorIcon(PhosphorIcons.mapPin(PhosphorIconsStyle.fill),
-                  size: 14, color: kAmber),
+                  size: 14, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 4),
               Text('Padra, Gujarat',
-                  style: GoogleFonts.dmSans(fontSize: 14, color: kTextMuted)),
+                  style: GoogleFonts.dmSans(fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ],
           ).animate(delay: 100.ms).fadeIn(duration: 400.ms),
         ],
@@ -425,7 +438,7 @@ class _SectionTitle extends StatelessWidget {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: kTextPrimary,
+          color: Theme.of(context).colorScheme.onSurface,
           letterSpacing: -0.3,
         ),
       ),
@@ -485,9 +498,9 @@ class _SoilMiniCard extends StatelessWidget {
           width: 160,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: kBgSurface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: kBorder),
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,10 +525,10 @@ class _SoilMiniCard extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
-                    color: kTextPrimary),
+                    color: Theme.of(context).colorScheme.onSurface),
               ),
               Text('Soil moisture',
-                  style: GoogleFonts.dmSans(fontSize: 12, color: kTextMuted)),
+                  style: GoogleFonts.dmSans(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -599,15 +612,18 @@ class _AiTeaserCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(kPaddingLarge),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [kIndigo, kIndigoGrad],
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.secondary,
+                Theme.of(context).colorScheme.secondary.withAlpha(200),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: kIndigo.withAlpha(80),
+                color: Theme.of(context).colorScheme.secondary.withAlpha(80),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -626,7 +642,7 @@ class _AiTeaserCard extends StatelessWidget {
                   child: PhosphorIcon(
                       PhosphorIcons.sparkle(PhosphorIconsStyle.fill),
                       size: 26,
-                      color: kAmber),
+                      color: Theme.of(context).colorScheme.primary),
                 ),
               ),
               const SizedBox(width: 16),
@@ -659,6 +675,111 @@ class _AiTeaserCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SmartToolsSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tools = [
+      (Icons.water_drop_rounded, 'Water\nCalc', const Color(0xFF4A90C2), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const WaterRequirementCalc()));
+      }),
+      (Icons.eco_rounded, 'Fertilizer', const Color(0xFF6B8E5A), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const FertilizerCalc()));
+      }),
+      (Icons.currency_rupee_rounded, 'Profit', const Color(0xFFD4A017), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfitMarginCalc()));
+      }),
+      (Icons.account_balance_rounded, 'Loan\nEMI', const Color(0xFF8E5572), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const LoanEMICalc()));
+      }),
+      (Icons.landscape_rounded, 'Land\nArea', const Color(0xFF92400E), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const LandAreaCalc()));
+      }),
+      (Icons.grass_rounded, 'Seed\nQty', const Color(0xFF4A7C59), () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const SeedQuantityCalc()));
+      }),
+    ];
+
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(kPadding, 0, kPadding, 0),
+        itemCount: tools.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (ctx, i) {
+          if (i == tools.length) {
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(ctx, '/calculators'),
+                child: Container(
+                  width: 110,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: cs.outlineVariant),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.grid_view_rounded, color: cs.primary, size: 28),
+                      const SizedBox(height: 8),
+                      Text('See All\nTools',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          final t = tools[i];
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: t.$4,
+              child: Container(
+                width: 110,
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cs.outlineVariant),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: t.$3.withAlpha(25),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(t.$1, color: t.$3, size: 24),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(t.$2,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface, height: 1.3)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _FloatingNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -670,6 +791,7 @@ class _FloatingNav extends StatelessWidget {
       (PhosphorIcons.house(PhosphorIconsStyle.fill), 'Home'),
       (PhosphorIcons.chatCircle(PhosphorIconsStyle.fill), 'Chat'),
       (PhosphorIcons.plant(PhosphorIconsStyle.fill), 'Soil'),
+      (PhosphorIcons.calculator(PhosphorIconsStyle.fill), 'Tools'),
       (PhosphorIcons.warning(PhosphorIconsStyle.fill), 'Alerts'),
       (PhosphorIcons.user(PhosphorIconsStyle.fill), 'Profile'),
     ];
@@ -680,12 +802,14 @@ class _FloatingNav extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
+          child: Builder(builder: (ctx) {
+            final cs = Theme.of(ctx).colorScheme;
+            return Container(
             height: 72,
             decoration: BoxDecoration(
-              color: kBgSurface.withAlpha(230),
+              color: cs.surface.withAlpha(230),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: kBorder),
+              border: Border.all(color: cs.outlineVariant),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(18),
@@ -710,7 +834,7 @@ class _FloatingNav extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: selected ? kAmberLight : Colors.transparent,
+                        color: selected ? cs.primary.withAlpha(30) : Colors.transparent,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -718,7 +842,7 @@ class _FloatingNav extends StatelessWidget {
                         children: [
                           PhosphorIcon(icon,
                               size: 22,
-                              color: selected ? kAmberDark : kTextMuted),
+                              color: selected ? cs.primary : cs.onSurfaceVariant),
                           if (selected) ...[
                             const SizedBox(width: 6),
                             Text(
@@ -726,7 +850,7 @@ class _FloatingNav extends StatelessWidget {
                               style: GoogleFonts.dmSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: kAmberDark,
+                                color: cs.primary,
                               ),
                             ),
                           ],
@@ -737,7 +861,8 @@ class _FloatingNav extends StatelessWidget {
                 );
               }).toList(),
             ),
-          ),
+          );
+          }),
         ),
       ),
     );

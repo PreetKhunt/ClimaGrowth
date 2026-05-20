@@ -117,6 +117,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           weather: weather,
           soil: soil,
           farmerName: auth.user?.name ?? '',
+          conciseResponses: settings.conciseResponses,
         );
     _scrollToBottom();
   }
@@ -239,10 +240,10 @@ class _AppBar extends StatelessWidget {
           child: Container(
             height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: const Color(0x24FFFFFF),
+            decoration: const BoxDecoration(
+              color: Color(0x24FFFFFF),
               border:
-                  const Border(bottom: BorderSide(color: Color(0x38FFFFFF))),
+                  Border(bottom: BorderSide(color: Color(0x38FFFFFF))),
             ),
             child: Row(
               children: [
@@ -458,7 +459,7 @@ class _BubbleRow extends StatelessWidget {
                   color: kAmber.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.copy_rounded, color: kAmber, size: 18),
+                child: const Icon(Icons.copy_rounded, color: kAmber, size: 18),
               ),
               title:
                   Text('Copy message', style: _geist(15, color: Colors.white)),
@@ -918,7 +919,7 @@ class _StopBtn extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.stop_circle_outlined, size: 14, color: kCoral),
+                      const Icon(Icons.stop_circle_outlined, size: 14, color: kCoral),
                       const SizedBox(width: 6),
                       Text('Stop generating', style: _geist(13, color: kCoral)),
                     ],

@@ -6,6 +6,7 @@ import '../models/supply_product.dart';
 import '../providers/cart_provider.dart';
 import '../utils/constants.dart';
 import '../utils/market_data.dart';
+import 'calculators/calc_profit_margin.dart';
 
 class MarketPricesScreen extends StatefulWidget {
   const MarketPricesScreen({super.key});
@@ -222,6 +223,24 @@ class _MarketPricesScreenState extends State<MarketPricesScreen>
                       ),
                     ),
                   ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ProfitMarginCalc())),
+                      child: _card(
+                        radius: 12,
+                        child: const SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: Center(
+                            child: Icon(Icons.trending_up_rounded, size: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   _cartBtn(context, cart),
                 ],
               ),
@@ -358,15 +377,10 @@ class _MarketPricesScreenState extends State<MarketPricesScreen>
         ),
         const SizedBox(height: 10),
         Expanded(
-          child: GridView.builder(
+          child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.7,
-            ),
             itemCount: products.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (_, i) =>
                 _ProductCard(product: products[i], cart: cart),
           ),
@@ -605,6 +619,7 @@ class _ProductCard extends StatelessWidget {
     final inCart = cart.contains(product.id);
 
     return Container(
+      height: 140,
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(16),
@@ -619,18 +634,19 @@ class _ProductCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Expanded(
-              flex: 5,
+            // Photo — left 100px
+            SizedBox(
+              width: 100,
+              height: 140,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
                     imageUrl: product.photoUrl,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => Container(
+                    errorWidget: (_, __, ___) => ColoredBox(
                       color: isDark
                           ? Colors.white10
                           : const Color(0xFFF0EDE8),
@@ -638,7 +654,7 @@ class _ProductCard extends StatelessWidget {
                           color: isDark
                               ? Colors.white30
                               : const Color(0xFFBDBDBD),
-                          size: 40),
+                          size: 36),
                     ),
                   ),
                   Positioned(
@@ -646,7 +662,7 @@ class _ProductCard extends StatelessWidget {
                     left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
+                          horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
                           color: kAmber,
                           borderRadius: BorderRadius.circular(20)),
@@ -660,10 +676,10 @@ class _ProductCard extends StatelessWidget {
                 ],
               ),
             ),
+            // Details — right side
             Expanded(
-              flex: 4,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -676,13 +692,13 @@ class _ProductCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 color: textPrimary,
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 height: 1.3)),
                         const SizedBox(height: 2),
                         Text(product.brand,
-                            style:
-                                TextStyle(color: textMuted, fontSize: 10)),
+                            style: TextStyle(
+                                color: textMuted, fontSize: 12)),
                       ],
                     ),
                     Row(
@@ -694,12 +710,12 @@ class _ProductCard extends StatelessWidget {
                             Text('₹${product.price.toInt()}',
                                 style: TextStyle(
                                     color: textPrimary,
-                                    fontSize: 13,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w800)),
                             Text('₹${product.mrp.toInt()}',
                                 style: TextStyle(
                                   color: textMuted,
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   decoration: TextDecoration.lineThrough,
                                   decorationColor: textMuted,
                                 )),
@@ -712,18 +728,18 @@ class _ProductCard extends StatelessWidget {
                                 ? cart.remove(product.id)
                                 : cart.add(product),
                             child: Container(
-                              width: 32,
-                              height: 32,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
                                 color: inCart ? kAmberDark : kAmber,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Icon(
-                                inCart
-                                    ? Icons.check_rounded
-                                    : Icons.add_rounded,
-                                color: Colors.white,
-                                size: 18,
+                              child: Text(
+                                inCart ? 'Added' : 'Add to Cart',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700),
                               ),
                             ),
                           ),

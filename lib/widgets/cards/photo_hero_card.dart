@@ -42,9 +42,9 @@ class PhotoHeroCard extends StatelessWidget {
                   highlightColor: Colors.white,
                   child: Container(color: kBgTertiary),
                 ),
-                errorWidget: (_, __, ___) => ColoredBox(
+                errorWidget: (_, __, ___) => const ColoredBox(
                   color: kBgTertiary,
-                  child: const Icon(Icons.image_not_supported_outlined,
+                  child: Icon(Icons.image_not_supported_outlined,
                       color: kTextMuted, size: 40),
                 ),
               ),

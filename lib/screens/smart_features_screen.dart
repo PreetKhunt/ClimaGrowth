@@ -386,10 +386,10 @@ class _IrrigationSchedulerState extends State<_IrrigationScheduler> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [
-                  const Icon(Icons.tips_and_updates_outlined, color: kOceanTeal, size: 18),
-                  const SizedBox(width: 8),
-                  const Text('Recommendation', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
+                const Row(children: [
+                  Icon(Icons.tips_and_updates_outlined, color: kOceanTeal, size: 18),
+                  SizedBox(width: 8),
+                  Text('Recommendation', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
                 ]),
                 const SizedBox(height: 12),
                 _resultRow('Schedule', rec),
@@ -750,9 +750,9 @@ class _SoilTestBookingState extends State<_SoilTestBooking> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white60, fontSize: 14)),
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: const Text(
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
                   'Collect soil from 4 corners + centre (0–20 cm depth). Mix and send 500g.',
                   style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
                   textAlign: TextAlign.center,
@@ -962,7 +962,7 @@ class _WeatherAlertsState extends State<_WeatherAlerts> {
         children: [
           Expanded(child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13))),
           Switch(value: value, onChanged: onChanged,
-              activeColor: kAmber, activeTrackColor: kAmber.withAlpha(80),
+              activeThumbColor: kAmber, activeTrackColor: kAmber.withAlpha(80),
               inactiveThumbColor: Colors.white38, inactiveTrackColor: Colors.white24),
         ],
       ),
@@ -1248,7 +1248,7 @@ class _KnowledgeReels extends StatelessWidget {
                           Row(children: [
                             Text(r['channel']!, style: const TextStyle(color: Colors.white54, fontSize: 11)),
                             const Spacer(),
-                            Icon(Icons.visibility_outlined, color: Colors.white38, size: 11),
+                            const Icon(Icons.visibility_outlined, color: Colors.white38, size: 11),
                             const SizedBox(width: 3),
                             Text(r['views']!, style: const TextStyle(color: Colors.white38, fontSize: 11)),
                           ]),
@@ -1326,9 +1326,9 @@ class _CropComparisonState extends State<_CropComparison> {
           Row(
             children: [
               Expanded(child: _picker(_cropA, (v) => setState(() => _cropA = v))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: const Text('VS', style: TextStyle(color: kAmber, fontSize: 16, fontWeight: FontWeight.w800)),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text('VS', style: TextStyle(color: kAmber, fontSize: 16, fontWeight: FontWeight.w800)),
               ),
               Expanded(child: _picker(_cropB, (v) => setState(() => _cropB = v))),
             ],

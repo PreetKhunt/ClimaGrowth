@@ -1,7 +1,5 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
@@ -16,109 +14,119 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Widget _glass({required Widget child, double radius = 20, EdgeInsetsGeometry? padding}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: kGlassSigma, sigmaY: kGlassSigma),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: kGlassColor,
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: kGlassBorder, width: 1),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  Widget _circleBtn({required VoidCallback onTap, required Widget icon}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: _glass(
-          radius: 18,
-          child: SizedBox(width: 36, height: 36, child: Center(child: icon)),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
 
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: _buildProfileHeader(user),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => _showEditSheet(context, auth, user),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () => Navigator.pushNamed(context, '/settings'),
+              ),
+            ],
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              _buildStatsRow(user),
+              const SizedBox(height: 12),
+              _buildMenuItems(context, auth),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileHeader(UserModel? user) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor.withOpacity(0.08),
+            Theme.of(context).scaffoldBackgroundColor,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+      child: Row(
         children: [
-          CachedNetworkImage(imageUrl: kPhotoSplash, fit: BoxFit.cover),
+          // Profile photo
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x44000000), Color(0xCC000000)],
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).primaryColor,
+                width: 2,
+              ),
+            ),
+            child: ClipOval(
+              child: Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.person, size: 40),
               ),
             ),
           ),
-          SafeArea(
+          const SizedBox(width: 16),
+          // Name and details
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      _circleBtn(
-                        onTap: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 18),
-                      ),
-                      const Spacer(),
-                      _circleBtn(
-                        onTap: () => _showEditSheet(context, auth, user),
-                        icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 18),
-                      ),
-                    ],
-                  ),
+                Text(
+                  user?.name.isNotEmpty == true ? user!.name : 'Farmer',
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w800),
                 ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-                    children: [
-                      _heroCard(user),
-                      const SizedBox(height: 16),
-                      _statsRow(user),
-                      const SizedBox(height: 16),
-                      _infoSection(
-                        title: 'Personal Info',
-                        items: [
-                          (Icons.person_outline_rounded, 'Name',
-                              user?.name.isNotEmpty == true ? user!.name : '—'),
-                          (Icons.phone_outlined, 'Mobile',
-                              user?.mobile.isNotEmpty == true ? user!.mobile : '—'),
-                          (Icons.email_outlined, 'Email',
-                              user?.email.isNotEmpty == true ? user!.email : '—'),
-                          (Icons.location_on_outlined, 'Village', user?.village ?? 'Padra, Gujarat'),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _infoSection(
-                        title: 'Farm Details',
-                        items: [
-                          (Icons.landscape_outlined, 'Farm Size',
-                              Formatters.acres(user?.farmSizeAcres ?? 1.0)),
-                          (Icons.language_outlined, 'Language',
-                              kLanguages[user?.language ?? 'en'] ?? 'English'),
-                          (Icons.wb_sunny_outlined, 'Theme', _themeLabel(user?.theme)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _actionsSection(context, auth),
-                    ],
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      user?.village.isNotEmpty == true
+                          ? user!.village
+                          : 'Padra, Gujarat',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Verified Farmer',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -129,259 +137,220 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String _themeLabel(String? theme) {
-    switch (theme) {
-      case 'dark': return 'Dark';
-      case 'system': return 'System';
-      default: return 'Light';
-    }
-  }
-
-  // ── Hero card ──────────────────────────────────────────────────────────────
-  Widget _heroCard(UserModel? user) {
-    final initials = user?.name.trim().isNotEmpty == true
-        ? user!.name.trim().split(RegExp(r'\s+')).map((w) => w[0].toUpperCase()).take(2).join()
-        : 'F';
-
-    return _glass(
-      radius: 24,
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-      child: Column(
+  Widget _buildStatsRow(UserModel? user) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          // Avatar with gradient ring
-          Container(
-            width: 100, height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [kAmber, kIndigo],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Container(
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF1A2B3C)),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          )
-              .animate()
-              .scale(begin: const Offset(0.5, 0.5), duration: 600.ms, curve: Curves.elasticOut),
-          const SizedBox(height: 14),
-          Text(
-            user?.name.isNotEmpty == true ? user!.name : 'Farmer',
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
-          ).animate(delay: 80.ms).fadeIn(),
-          const SizedBox(height: 5),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.location_on_outlined, color: Colors.white60, size: 14),
-              const SizedBox(width: 3),
-              Text(
-                user?.village.isNotEmpty == true ? user!.village : 'Padra, Gujarat',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-            ],
-          ).animate(delay: 130.ms).fadeIn(),
-          const SizedBox(height: 5),
-          Text(
-            'Member since ${Formatters.date(user?.createdAt ?? DateTime.now())}',
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
-          ).animate(delay: 180.ms).fadeIn(),
+          _buildStatCard('3', 'Farms'),
+          const SizedBox(width: 12),
+          _buildStatCard('12', 'Crops'),
+          const SizedBox(width: 12),
+          _buildStatCard('245', 'Points'),
         ],
       ),
     );
   }
 
-  // ── Stats row ──────────────────────────────────────────────────────────────
-  Widget _statsRow(UserModel? user) {
-    return Row(
-      children: [
-        _statCard(
-          value: user?.farmSizeAcres.toStringAsFixed(1) ?? '—',
-          label: 'Acres',
-          icon: Icons.landscape_outlined,
-        ),
-        const SizedBox(width: 10),
-        _statCard(
-          value: kLanguages[user?.language ?? 'en']?.split(' ').first ?? 'EN',
-          label: 'Language',
-          icon: Icons.language_outlined,
-        ),
-        const SizedBox(width: 10),
-        _statCard(
-          value: _themeLabel(user?.theme),
-          label: 'Theme',
-          icon: Icons.brightness_4_outlined,
-        ),
-      ],
-    ).animate(delay: 220.ms).fadeIn().slideY(begin: 0.12);
-  }
-
-  Widget _statCard({required String value, required String label, required IconData icon}) {
+  Widget _buildStatCard(String value, String label) {
     return Expanded(
-      child: _glass(
-        radius: 16,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border:
+              Border.all(color: const Color.fromRGBO(0, 0, 0, 0.07), width: 1),
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: Column(
           children: [
-            Icon(icon, color: kAmber, size: 20),
-            const SizedBox(height: 6),
-            Text(value,
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
-                maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
-            const SizedBox(height: 3),
-            Text(label,
-                style: const TextStyle(color: Colors.white54, fontSize: 11),
-                textAlign: TextAlign.center),
+            Text(
+              value,
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFFE55934)),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ── Info sections ──────────────────────────────────────────────────────────
-  Widget _infoSection({
-    required String title,
-    required List<(IconData, String, String)> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white54, fontSize: 11,
-              fontWeight: FontWeight.w700, letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        _glass(
-          radius: 16,
-          child: Column(
-            children: items.asMap().entries.map((e) {
-              final (icon, label, value) = e.value;
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                    child: Row(
-                      children: [
-                        Icon(icon, color: kAmber, size: 20),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(label,
-                                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                              const SizedBox(height: 2),
-                              Text(value,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+  Widget _buildMenuItems(BuildContext context, AuthProvider auth) {
+    final user = auth.user;
+    final menuItems = [
+      (
+        'My Farms',
+        '3 farms registered',
+        Icons.landscape_outlined,
+        const Color(0xFF7CB342)
+      ),
+      (
+        'My Crops',
+        '12 crops growing',
+        Icons.agriculture_outlined,
+        const Color(0xFF558B2F)
+      ),
+      (
+        'Order History',
+        '8 orders placed',
+        Icons.receipt_outlined,
+        const Color(0xFFFBC02D)
+      ),
+      (
+        'Saved Items',
+        '5 items in wishlist',
+        Icons.favorite_outline,
+        const Color(0xFFE91E63)
+      ),
+      (
+        'Mission Points',
+        '245 points earned',
+        Icons.emoji_events_outlined,
+        const Color(0xFF9C27B0)
+      ),
+      (
+        'Crop Calendar',
+        'Next: irrigation',
+        Icons.calendar_today_outlined,
+        const Color(0xFF03A9F4)
+      ),
+      (
+        'Voice Diary',
+        '23 entries recorded',
+        Icons.mic_outlined,
+        const Color(0xFF009688)
+      ),
+      (
+        'Disease Scan',
+        '4 scans this month',
+        Icons.bug_report_outlined,
+        const Color(0xFFF44336)
+      ),
+      (
+        'Family Members',
+        '2 connected',
+        Icons.people_outline,
+        const Color(0xFF8B7355)
+      ),
+      (
+        'Carbon Credits',
+        '42 credits earned',
+        Icons.eco_outlined,
+        const Color(0xFF4CAF50)
+      ),
+      (
+        'KYC Documents',
+        'Verification pending',
+        Icons.description_outlined,
+        const Color(0xFF9E9E9E)
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          ...menuItems.map((item) {
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {},
+                child: Container(
+                  height: 64,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                        color: const Color.fromRGBO(0, 0, 0, 0.07), width: 1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  if (e.key < items.length - 1)
-                    const Divider(height: 1, color: Color(0x28FFFFFF), indent: 50),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Actions section ────────────────────────────────────────────────────────
-  Widget _actionsSection(BuildContext context, AuthProvider auth) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'ACCOUNT',
-            style: TextStyle(
-              color: Colors.white54, fontSize: 11,
-              fontWeight: FontWeight.w700, letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        _glass(
-          radius: 16,
-          child: Column(
-            children: [
-              _actionRow(
-                icon: Icons.settings_outlined, label: 'Settings',
-                color: kOceanTeal,
-                onTap: () => Navigator.pushNamed(context, '/settings'),
-              ),
-              const Divider(height: 1, color: Color(0x28FFFFFF), indent: 50),
-              _actionRow(
-                icon: Icons.help_outline_rounded, label: 'Help & Support',
-                color: kForestSage,
-                onTap: () => Navigator.pushNamed(context, '/help'),
-              ),
-              const Divider(height: 1, color: Color(0x28FFFFFF), indent: 50),
-              _actionRow(
-                icon: Icons.logout_rounded, label: 'Sign Out',
-                color: kCoral, labelColor: kCoral,
-                onTap: () => _confirmSignOut(context, auth),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _actionRow({
-    required IconData icon,
-    required String label,
-    required Color color,
-    Color? labelColor,
-    required VoidCallback onTap,
-  }) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: labelColor ?? Colors.white,
-                    fontSize: 14, fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: item.$4.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(item.$3, color: item.$4, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              item.$1,
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item.$2,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right,
+                          color: Colors.grey[400], size: 20),
+                    ],
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Colors.white38, size: 20),
-            ],
+            );
+          }),
+          const SizedBox(height: 12),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _confirmSignOut(context, auth),
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red[600],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
 
-  // ── Dialogs / sheets ───────────────────────────────────────────────────────
+  void _showEditSheet(
+      BuildContext context, AuthProvider auth, UserModel? user) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => const Center(
+        child: Text('Edit profile (TODO: implement)'),
+      ),
+    );
+  }
+
   void _confirmSignOut(BuildContext context, AuthProvider auth) {
     showDialog(
       context: context,
@@ -389,131 +358,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Sign out?'),
         content: const Text('You will be returned to the login screen.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await auth.signOut();
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (_) => false);
               }
             },
-            child: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+            child: const Text('Sign out', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
-    );
-  }
-
-  void _showEditSheet(BuildContext context, AuthProvider auth, UserModel? user) {
-    if (user == null) return;
-
-    final nameCtrl = TextEditingController(text: user.name);
-    final mobileCtrl = TextEditingController(text: user.mobile);
-    final villageCtrl = TextEditingController(text: user.village);
-    double farmSize = user.farmSizeAcres;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A2B3C),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.fromLTRB(
-              20, 12, 20, MediaQuery.of(ctx).viewInsets.bottom + 28),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white30,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text('Edit Profile',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 20),
-                _sheetField('Name', nameCtrl),
-                const SizedBox(height: 12),
-                _sheetField('Mobile', mobileCtrl, keyboardType: TextInputType.phone),
-                const SizedBox(height: 12),
-                _sheetField('Village', villageCtrl),
-                const SizedBox(height: 16),
-                Text(
-                  'Farm Size: ${farmSize.toStringAsFixed(1)} acres',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                Slider(
-                  value: farmSize,
-                  min: 0.5, max: 100,
-                  divisions: 199,
-                  activeColor: kAmber,
-                  inactiveColor: Colors.white24,
-                  onChanged: (v) => setS(() => farmSize = v),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final updated = user.copyWith(
-                        name: nameCtrl.text.trim(),
-                        mobile: mobileCtrl.text.trim(),
-                        village: villageCtrl.text.trim(),
-                        farmSizeAcres: farmSize,
-                      );
-                      await auth.updateProfile(updated);
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAmber,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text('Save Changes',
-                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _sheetField(String label, TextEditingController ctrl, {TextInputType? keyboardType}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        TextField(
-          controller: ctrl,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white10,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          ),
-        ),
-      ],
     );
   }
 }

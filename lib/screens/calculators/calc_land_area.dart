@@ -88,7 +88,7 @@ class _LandAreaCalcState extends State<LandAreaCalc> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: fromUnit,
+                          initialValue: fromUnit,
                           onChanged: (v) =>
                               setState(() => fromUnit = v ?? 'acres'),
                           items: _toSqm.keys
@@ -103,11 +103,11 @@ class _LandAreaCalcState extends State<LandAreaCalc> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Icon(Icons.arrow_forward, color: kAmber),
+                      const Icon(Icons.arrow_forward, color: kAmber),
                       const SizedBox(width: 10),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: toUnit,
+                          initialValue: toUnit,
                           onChanged: (v) =>
                               setState(() => toUnit = v ?? 'hectares'),
                           items: _toSqm.keys

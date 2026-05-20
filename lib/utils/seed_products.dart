@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/supply_product.dart';
 import 'market_data.dart';
 
 /// Run once from admin panel or dev console to seed Firestore.

@@ -46,6 +46,7 @@ class ChatProvider extends ChangeNotifier {
     SoilModel? soil,
     String farmerName = '',
     String cropName = '',
+    bool conciseResponses = true,
   }) async {
     final userMsg = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -76,6 +77,7 @@ class ChatProvider extends ChangeNotifier {
       soil: soil,
       farmerName: farmerName,
       cropName: cropName,
+      conciseResponses: conciseResponses,
     );
 
     _streamSub = stream.listen(
@@ -136,6 +138,7 @@ class ChatProvider extends ChangeNotifier {
     _messages.clear();
     _streamingContent = '';
     _typing = false;
+    _service.clearHistory();
     notifyListeners();
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../services/geocoding_service.dart';
 import '../services/location_service.dart';
 import '../utils/constants.dart';
 
 class LocationProvider extends ChangeNotifier {
   final LocationService _service = LocationService();
+  final GeocodingService _geocoding = GeocodingService();
 
   double _lat = kDefaultLat;
   double _lon = kDefaultLon;
@@ -25,13 +27,19 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  void setManualVillage(String name) {
+  Future<void> setManualVillage(String name) async {
     _village = name;
-    // Map village to approximate coordinates for Padra region
     final coords = _villageCoords[name];
     if (coords != null) {
       _lat = coords.$1;
       _lon = coords.$2;
+    } else {
+      // Resolve unknown village via Open-Meteo geocoding API
+      final result = await _geocoding.geocode(name);
+      if (result != null) {
+        _lat = result.latitude;
+        _lon = result.longitude;
+      }
     }
     notifyListeners();
   }

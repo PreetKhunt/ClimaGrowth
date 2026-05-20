@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/air_quality_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/chat_provider.dart';
@@ -45,6 +46,7 @@ class ClimaGrowthApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
+        ChangeNotifierProvider(create: (_) => AirQualityProvider()),
         ChangeNotifierProvider(create: (_) => SoilProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
@@ -88,7 +90,7 @@ class ClimaGrowthApp extends StatelessWidget {
               '/admin': (_) => const AdminLoginScreen(),
               '/admin/dashboard': (_) => const AdminDashboardScreen(),
               '/checkout': (_) =>
-                  CheckoutScreen(items: const [], totalAmount: 0),
+                  const CheckoutScreen(items: [], totalAmount: 0),
               '/calculators': (_) => const CalculatorsScreen(),
               '/ui-designer': (_) => const UIDesignerScreen(),
             },

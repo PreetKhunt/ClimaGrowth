@@ -196,9 +196,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildOrderReview() {
-    double gst = widget.totalAmount * 0.05;
-    double delivery = widget.totalAmount > 1000 ? 0 : 50;
-    double finalTotal = widget.totalAmount + gst + delivery;
+    final double gst = widget.totalAmount * 0.05;
+    final double delivery = widget.totalAmount > 1000 ? 0 : 50;
+    final double finalTotal = widget.totalAmount + gst + delivery;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

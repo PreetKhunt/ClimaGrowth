@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../providers/air_quality_provider.dart';
 import '../providers/location_provider.dart';
 import '../providers/weather_provider.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
 import '../widgets/offline_banner.dart';
+import 'calculators/calc_water_requirement.dart';
 
 class WeatherScreen extends StatelessWidget {
   const WeatherScreen({super.key});
@@ -35,12 +37,21 @@ class WeatherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wp = context.watch<WeatherProvider>();
+    final aqp = context.watch<AirQualityProvider>();
     final loc = context.read<LocationProvider>();
     final tt = Theme.of(context).textTheme;
     final weather = wp.weather;
     final condition = weather?.condition ?? 'sunny';
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context, MaterialPageRoute(builder: (_) => const WaterRequirementCalc())),
+        backgroundColor: kOceanTeal,
+        icon: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 20),
+        label: const Text('Water Calc',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -103,9 +114,10 @@ class WeatherScreen extends StatelessWidget {
                       MouseRegion(
                         cursor: SystemMouseCursors.click,
                         child: GestureDetector(
-                          onTap: () => context
-                              .read<WeatherProvider>()
-                              .fetch(loc.lat, loc.lon),
+                          onTap: () {
+                            context.read<WeatherProvider>().fetch(loc.lat, loc.lon);
+                            context.read<AirQualityProvider>().fetch(loc.lat, loc.lon);
+                          },
                           child: Container(
                             width: 36,
                             height: 36,
@@ -324,6 +336,14 @@ class WeatherScreen extends StatelessWidget {
 
                         const SizedBox(height: 16),
 
+                        // Air quality
+                        if (aqp.airQuality != null)
+                          _glassCard(
+                            child: _airQualityCard(aqp),
+                          ),
+
+                        if (aqp.airQuality != null) const SizedBox(height: 16),
+
                         // 7-day forecast
                         _glassCard(
                           child: Column(
@@ -350,6 +370,90 @@ class WeatherScreen extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _airQualityCard(AirQualityProvider aqp) {
+    final aq = aqp.airQuality!;
+    final aqiColor = aq.europeanAqi <= 20
+        ? const Color(0xFF4CAF50)
+        : aq.europeanAqi <= 40
+            ? const Color(0xFF8BC34A)
+            : aq.europeanAqi <= 60
+                ? const Color(0xFFFFEB3B)
+                : aq.europeanAqi <= 80
+                    ? const Color(0xFFFF9800)
+                    : const Color(0xFFF44336);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.air_rounded, color: Colors.white70, size: 18),
+            const SizedBox(width: 6),
+            const Text(
+              'Air Quality',
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: aqiColor.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: aqiColor.withOpacity(0.60)),
+              ),
+              child: Text(
+                aq.label,
+                style: TextStyle(color: aqiColor, fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            _aqStat('AQI', '${aq.europeanAqi}', 'European'),
+            _aqStat('PM2.5', aq.pm25.toStringAsFixed(1), 'μg/m³'),
+            _aqStat('PM10', aq.pm10.toStringAsFixed(1), 'μg/m³'),
+            _aqStat('UV', aq.uvIndex.toStringAsFixed(1), 'Index'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.wb_sunny_outlined, color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  aq.uvAdvice,
+                  style: const TextStyle(color: Color(0xC7FFFFFF), fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _aqStat(String label, String value, String unit) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(unit, style: const TextStyle(color: Color(0xAAFFFFFF), fontSize: 10)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Color(0xC7FFFFFF), fontSize: 11)),
         ],
       ),
     );

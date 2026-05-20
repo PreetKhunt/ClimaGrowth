@@ -109,7 +109,7 @@ class _SoilMoistureCalcState extends State<SoilMoistureCalc> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: soilType,
+                    initialValue: soilType,
                     onChanged: (v) => setState(() => soilType = v ?? 'loamy'),
                     items: ['clay', 'loamy', 'sandy']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
