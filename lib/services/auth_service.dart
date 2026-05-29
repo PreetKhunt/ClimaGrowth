@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/user_model.dart';
 
@@ -44,6 +46,60 @@ class AuthService {
 
   Future<void> sendPasswordReset(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  // ── Google Sign-In ───────────────────────────────────────────────────────
+
+  Future<UserCredential?> signInWithGoogle() async {
+    if (kIsWeb) {
+      // On web: Firebase popup flow (no google_sign_in needed, no client_id meta tag needed)
+      final provider = GoogleAuthProvider()
+        ..addScope('email')
+        ..addScope('profile');
+      final cred = await _auth.signInWithPopup(provider);
+      await _upsertGoogleUser(cred.user!);
+      return cred;
+    } else {
+      // On Android/iOS: native account picker via google_sign_in package
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      await googleSignIn.signOut(); // force account picker every time
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null; // user cancelled
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final cred = await _auth.signInWithCredential(credential);
+      await _upsertGoogleUser(cred.user!);
+      return cred;
+    }
+  }
+
+  Future<void> _upsertGoogleUser(User user) async {
+    final ref = _db.collection('users').doc(user.uid);
+    final doc = await ref.get();
+    if (!doc.exists) {
+      await ref.set({
+        'uid': user.uid,
+        'name': user.displayName ?? '',
+        'email': user.email ?? '',
+        'mobile': user.phoneNumber ?? '',
+        'photoUrl': user.photoURL ?? '',
+        'village': 'Padra',
+        'farmSizeAcres': 1.0,
+        'language': 'en',
+        'theme': 'light',
+        'authProvider': 'google',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      await ref.update({
+        'lastLogin': FieldValue.serverTimestamp(),
+        'photoUrl': user.photoURL ?? '',
+      });
+    }
   }
 
   // ── OTP (Phone) ──────────────────────────────────────────────────────────

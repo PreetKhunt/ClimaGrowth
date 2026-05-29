@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 24),
 
                   // Logo + title
-                  _Header().animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
+                  const _Header().animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
 
                   const SizedBox(height: 36),
 
@@ -112,12 +112,22 @@ class _LoginScreenState extends State<LoginScreen>
 
                   const SizedBox(height: 20),
 
+                  // ── Google Sign-In ────────────────────────────────────────
+                  const _OrDivider(),
+                  const SizedBox(height: 16),
+                  _GoogleSignInButton(
+                    loading: auth.loading,
+                    onTap: _handleGoogleSignIn,
+                  ),
+
+                  const SizedBox(height: 20),
+
                   // Demo mode
                   OutlinedButton.icon(
                     onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
                     icon: const Icon(Icons.explore_outlined),
                     label: const Text('Try Demo (No Login Required)'),
-                  ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
+                  ),
 
                   const SizedBox(height: 16),
 
@@ -287,9 +297,16 @@ class _LoginScreenState extends State<LoginScreen>
     );
     if (ok && mounted) Navigator.pushReplacementNamed(context, '/home');
   }
+
+  Future<void> _handleGoogleSignIn() async {
+    HapticFeedback.mediumImpact();
+    final ok = await context.read<AuthProvider>().signInWithGoogle();
+    if (ok && mounted) Navigator.pushReplacementNamed(context, '/home');
+  }
 }
 
 class _Header extends StatelessWidget {
+  const _Header();
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -392,6 +409,102 @@ class _GlassFormCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            'OR',
+            style: GoogleFonts.dmSans(
+              color: kTextMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: Colors.white.withOpacity(0.12))),
+      ],
+    );
+  }
+}
+
+class _GoogleSignInButton extends StatelessWidget {
+  final bool loading;
+  final VoidCallback onTap;
+  const _GoogleSignInButton({required this.loading, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: loading ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 1,
+          shadowColor: Colors.black.withOpacity(0.08),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 22, height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const _GoogleLogo(),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Continue with Google',
+                    style: GoogleFonts.dmSans(
+                      color: Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// Inline Google G logo — no assets, no network required
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF4285F4),
+            height: 1,
           ),
         ),
       ),

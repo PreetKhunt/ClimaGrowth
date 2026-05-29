@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +15,7 @@ import '../providers/soil_provider.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
 import 'calculators/calc_fertilizer.dart';
+import 'farm_map_screen.dart';
 import 'soil_doctor_screen.dart';
 
 class SoilScreen extends StatefulWidget {
@@ -27,6 +30,9 @@ class _SoilScreenState extends State<SoilScreen> {
   FlutterTts? _tts;
   bool _isSpeaking = false;
 
+  // Farm location state
+  Map<String, dynamic>? _savedFarm;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +42,12 @@ class _SoilScreenState extends State<SoilScreen> {
         if (mounted) setState(() => _isSpeaking = false);
       });
     }
+    _loadFarm();
+  }
+
+  Future<void> _loadFarm() async {
+    final farm = await FarmLocationStore.load();
+    if (mounted) setState(() => _savedFarm = farm);
   }
 
   @override
@@ -237,6 +249,10 @@ class _SoilScreenState extends State<SoilScreen> {
                   padding:
                       const EdgeInsets.fromLTRB(16, 4, 16, 32),
                   children: [
+                    // 0 — Farm location card
+                    _buildFarmLocationCard(context),
+                    const SizedBox(height: 12),
+
                     // 1 — Hero score card
                     _buildHeroCard(context, soil)
                         .animate()
@@ -310,6 +326,82 @@ class _SoilScreenState extends State<SoilScreen> {
         ),
       ),
     );
+  }
+
+  // ── 0. Farm Location Card ─────────────────────────────────────────────────
+  Widget _buildFarmLocationCard(BuildContext context) {
+    final hasFarm = _savedFarm != null;
+    final name = _savedFarm?['name'] as String? ?? 'My Farm';
+    final area = _savedFarm?['areaAcres'] as double?;
+
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FarmMapScreen()),
+        );
+        _loadFarm();
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: hasFarm ? kCineGreen.withOpacity(0.06) : kCineCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: hasFarm ? kCineGreen.withOpacity(0.28) : kCineBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52, height: 52,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kCineGreen.withOpacity(0.12),
+                    border: Border.all(color: kCineGreen.withOpacity(0.3)),
+                    boxShadow: hasFarm
+                        ? [BoxShadow(color: kGlowGreen, blurRadius: 16)]
+                        : null,
+                  ),
+                  child: Icon(
+                    hasFarm ? Icons.agriculture_rounded : Icons.map_outlined,
+                    color: kCineGreen, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        hasFarm ? name : 'My Farm Location',
+                        style: GoogleFonts.syne(
+                          color: Colors.white, fontSize: 15,
+                          fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        hasFarm
+                            ? (area != null
+                                ? '${area.toStringAsFixed(2)} acres · Tap to update'
+                                : 'Saved · Tap to update')
+                            : 'Tap to mark your farm on map',
+                        style: GoogleFonts.outfit(
+                          color: kCineTextSub, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: kCineTextDim, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.1);
   }
 
   // ── 1. Hero Card ──────────────────────────────────────────────────────────
@@ -448,9 +540,8 @@ class _SoilScreenState extends State<SoilScreen> {
     );
   }
 
-  // ── 3. Live Soil Vitals (2×3 grid) ───────────────────────────────────────
+  // ── 3. Live Soil Vitals ───────────────────────────────────────────────────
   Widget _buildVitals(BuildContext context, SoilModel soil) {
-    final cs = Theme.of(context).colorScheme;
     final h = soil.healthStatus;
     final m = soil.moistureLevel;
 
@@ -473,34 +564,65 @@ class _SoilScreenState extends State<SoilScreen> {
       _VitalData('Potassium', '${_potassium(h, m).toInt()} ppm', kCoral,
           _potassium(h, m) > 180 ? 'Good' : 'Low',
           List.generate(7, (i) => (_potassium(h, m) - 20 + i * 8) / 300)),
-      _VitalData('Soil Temp', '${_soilTemp(m).toStringAsFixed(1)}°C',
-          kAmber,
+      _VitalData('Soil Temp', '${_soilTemp(m).toStringAsFixed(1)}°C', kAmber,
           _soilTemp(m) < 32 ? 'Normal' : 'High',
           List.generate(7, (i) => (_soilTemp(m) + i * 0.3 - 1) / 40)),
     ];
 
-    return _card(
-      context,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionLabel(context, 'Live Soil Vitals'),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.85,
-            ),
-            itemCount: vitals.length,
-            itemBuilder: (_, i) => _VitalTile(vital: vitals[i], cs: cs),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: kCineCard,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: kCineBorder),
           ),
-        ],
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 3, height: 18,
+                    decoration: BoxDecoration(
+                      color: kCineGreen,
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: [BoxShadow(color: kGlowGreen, blurRadius: 8)],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('LIVE SOIL VITALS',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11, fontWeight: FontWeight.w700,
+                        color: kCineTextSub, letterSpacing: 2.2,
+                      )),
+                  const Spacer(),
+                  _VitalLiveDot(),
+                ],
+              ),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (ctx, constraints) {
+                  if (constraints.maxWidth >= 600) {
+                    return _TwoColVitalGrid(vitals: vitals);
+                  }
+                  return Column(
+                    children: [
+                      for (int i = 0; i < vitals.length; i++) ...[
+                        _SoilVitalCard(vital: vitals[i], index: i),
+                        if (i < vitals.length - 1) const SizedBox(height: 10),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      padding: const EdgeInsets.all(16),
     );
   }
 
@@ -1236,57 +1358,294 @@ class _TimelineEvent {
 
 // ── Sub-widgets ───────────────────────────────────────────────────────────────
 
-class _VitalTile extends StatelessWidget {
+// ── Soil Vital Card (horizontal premium) ─────────────────────────────────────
+
+class _TwoColVitalGrid extends StatelessWidget {
+  final List<_VitalData> vitals;
+  const _TwoColVitalGrid({required this.vitals});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = (vitals.length / 2).ceil();
+    return Column(
+      children: [
+        for (int row = 0; row < rows; row++) ...[
+          Row(
+            children: [
+              Expanded(child: _SoilVitalCard(vital: vitals[row * 2], index: row * 2)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: row * 2 + 1 < vitals.length
+                    ? _SoilVitalCard(vital: vitals[row * 2 + 1], index: row * 2 + 1)
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+          if (row < rows - 1) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _SoilVitalCard extends StatefulWidget {
   final _VitalData vital;
-  final ColorScheme cs;
-  const _VitalTile({required this.vital, required this.cs});
+  final int index;
+  const _SoilVitalCard({required this.vital, required this.index});
+
+  @override
+  State<_SoilVitalCard> createState() => _SoilVitalCardState();
+}
+
+class _SoilVitalCardState extends State<_SoilVitalCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  bool _hovered = false;
+
+  static IconData _iconFor(String label) => switch (label) {
+        'Moisture'   => Icons.water_drop_outlined,
+        'pH Level'   => Icons.science_outlined,
+        'Nitrogen'   => Icons.eco_outlined,
+        'Phosphorus' => Icons.bubble_chart_outlined,
+        'Potassium'  => Icons.bolt_outlined,
+        'Soil Temp'  => Icons.thermostat_outlined,
+        _            => Icons.circle_outlined,
+      };
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(vsync: this, duration: 2200.ms)
+      ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final v = widget.vital;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: 200.ms,
+        decoration: BoxDecoration(
+          color: _hovered ? v.color.withOpacity(0.08) : kCineCard,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: _hovered
+                ? v.color.withOpacity(0.38)
+                : v.color.withOpacity(0.16),
+          ),
+          boxShadow: _hovered
+              ? [BoxShadow(
+                  color: v.color.withOpacity(0.18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6))]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Row(
+                children: [
+                  _SoilIconOrb(
+                    pulse: _pulse,
+                    color: v.color,
+                    icon: _iconFor(v.label),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(v.label.toUpperCase(),
+                            style: GoogleFonts.outfit(
+                              fontSize: 9, fontWeight: FontWeight.w700,
+                              color: kCineTextDim, letterSpacing: 1.5,
+                            )),
+                        const SizedBox(height: 3),
+                        Text(v.value,
+                            style: GoogleFonts.syne(
+                              fontSize: 20, fontWeight: FontWeight.w800,
+                              color: v.color, height: 1.0,
+                            )),
+                        const SizedBox(height: 6),
+                        _VitalStatusBadge(status: v.status, color: v.color),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _SoilSparklinePanel(data: v.sparkline, color: v.color),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+        .animate(delay: (widget.index * 80).ms)
+        .fadeIn(duration: 500.ms)
+        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
+  }
+}
+
+class _SoilIconOrb extends StatelessWidget {
+  final AnimationController pulse;
+  final Color color;
+  final IconData icon;
+  const _SoilIconOrb(
+      {required this.pulse, required this.color, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (_, __) {
+        final glow = 0.18 + pulse.value * 0.32;
+        return Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.12),
+            border: Border.all(color: color.withOpacity(0.28), width: 1.5),
+            boxShadow: [
+              BoxShadow(color: color.withOpacity(glow), blurRadius: 18, spreadRadius: 2),
+            ],
+          ),
+          child: Icon(icon, color: color, size: 22),
+        );
+      },
+    );
+  }
+}
+
+class _VitalStatusBadge extends StatelessWidget {
+  final String status;
+  final Color color;
+  const _VitalStatusBadge({required this.status, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: vital.color.withAlpha(12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: vital.color.withAlpha(50)),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(vital.label.toUpperCase(),
-              style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5)),
-          Text(vital.value,
-              style: TextStyle(
-                  color: vital.color,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800)),
-          Row(
-            children: [
-              Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      color: vital.color, shape: BoxShape.circle)),
-              const SizedBox(width: 4),
-              Flexible(
-                  child: Text(vital.status,
-                      style: TextStyle(
-                          color: cs.onSurfaceVariant, fontSize: 9),
-                      overflow: TextOverflow.ellipsis)),
-            ],
+      child: Text(status,
+          style: GoogleFonts.outfit(
+            fontSize: 9, fontWeight: FontWeight.w700,
+            color: color, letterSpacing: 0.8,
+          )),
+    );
+  }
+}
+
+class _SoilSparklinePanel extends StatelessWidget {
+  final List<double> data;
+  final Color color;
+  const _SoilSparklinePanel({required this.data, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final trend = data.length >= 2
+        ? (data.last > data.first ? '+' : data.last < data.first ? '−' : '~')
+        : '~';
+    final trendColor = trend == '+'
+        ? kCineGreen
+        : trend == '−'
+            ? kCineOrange
+            : kCineTextSub;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        SizedBox(
+          width: 68,
+          height: 34,
+          child: CustomPaint(
+            painter: _EnhancedSparklinePainter(data, color),
           ),
-          SizedBox(
-            height: 22,
-            child: CustomPaint(
-              size: const Size(double.infinity, 22),
-              painter: _SparklinePainter(vital.sparkline, vital.color),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: trendColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+              trend == '~' ? 'STABLE' : trend == '+' ? 'RISING' : 'FALLING',
+              style: GoogleFonts.outfit(
+                fontSize: 8, fontWeight: FontWeight.w800,
+                color: trendColor, letterSpacing: 0.6,
+              )),
+        ),
+      ],
+    );
+  }
+}
+
+class _VitalLiveDot extends StatefulWidget {
+  @override
+  State<_VitalLiveDot> createState() => _VitalLiveDotState();
+}
+
+class _VitalLiveDotState extends State<_VitalLiveDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: 1600.ms)
+      ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6, height: 6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: kCineGreen.withOpacity(0.5 + _ctrl.value * 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: kCineGreen.withOpacity(_ctrl.value * 0.8),
+                  blurRadius: 6),
+              ],
             ),
           ),
+          const SizedBox(width: 6),
+          Text('LIVE',
+              style: GoogleFonts.outfit(
+                fontSize: 9, fontWeight: FontWeight.w700,
+                color: kCineGreen, letterSpacing: 1.2,
+              )),
         ],
       ),
     );
@@ -1336,37 +1695,66 @@ class _IrrigationDayTile extends StatelessWidget {
 
 // ── Custom painters ───────────────────────────────────────────────────────────
 
-class _SparklinePainter extends CustomPainter {
+class _EnhancedSparklinePainter extends CustomPainter {
   final List<double> data;
   final Color color;
-  const _SparklinePainter(this.data, this.color);
+  const _EnhancedSparklinePainter(this.data, this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (data.length < 2) return;
-    final paint = Paint()
-      ..color = color.withAlpha(180)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
 
     final w = size.width / (data.length - 1);
-    final path = Path();
+    final linePath = Path();
+    final fillPath = Path();
+
     for (int i = 0; i < data.length; i++) {
       final x = i * w;
-      final y = size.height - (data[i].clamp(0, 1) * size.height);
+      final y = size.height - (data[i].clamp(0.0, 1.0) * size.height);
       if (i == 0) {
-        path.moveTo(x, y);
+        linePath.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
       } else {
-        path.lineTo(x, y);
+        final px = (i - 1) * w;
+        final py = size.height - (data[i - 1].clamp(0.0, 1.0) * size.height);
+        final cpx = (px + x) / 2;
+        linePath.cubicTo(cpx, py, cpx, y, x, y);
+        fillPath.cubicTo(cpx, py, cpx, y, x, y);
       }
     }
-    canvas.drawPath(path, paint);
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [color.withOpacity(0.28), color.withOpacity(0.0)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..style = PaintingStyle.fill,
+    );
+
+    canvas.drawPath(
+      linePath,
+      Paint()
+        ..color = color.withOpacity(0.9)
+        ..strokeWidth = 1.8
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+
+    final lastX = (data.length - 1) * w;
+    final lastY = size.height - (data.last.clamp(0.0, 1.0) * size.height);
+    canvas.drawCircle(Offset(lastX, lastY), 2.5, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(_SparklinePainter old) => old.data != data;
+  bool shouldRepaint(_EnhancedSparklinePainter old) => old.data != data;
 }
+
 
 class _MicrobePainter extends CustomPainter {
   final double health;

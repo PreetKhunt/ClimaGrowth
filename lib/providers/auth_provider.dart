@@ -121,6 +121,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> signInWithGoogle() async {
+    _setLoading(true);
+    try {
+      final cred = await _service.signInWithGoogle();
+      return cred != null;
+    } on FirebaseAuthException catch (e) {
+      _error = _authError(e.code);
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Google sign-in failed. Please try again.';
+      notifyListeners();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> updateProfile(UserModel updated) async {
     await _service.updateUserProfile(updated);
     _user = updated;
@@ -149,6 +167,8 @@ class AuthProvider extends ChangeNotifier {
       case 'weak-password': return 'Password must be at least 6 characters.';
       case 'invalid-email': return 'Enter a valid email address.';
       case 'too-many-requests': return 'Too many attempts. Please try again later.';
+      case 'operation-not-allowed': return 'Google sign-in is not enabled. Contact support.';
+      case 'account-exists-with-different-credential': return 'Account exists with different sign-in method.';
       default: return 'Authentication error. Please try again.';
     }
   }

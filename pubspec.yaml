@@ -33,7 +33,11 @@ dependencies:
 
   # Maps & Location
   google_maps_flutter: ^2.6.0
+  google_maps_flutter_web: ^0.5.6
   geolocator: ^11.0.0
+
+  # Auth — Google Sign-In
+  google_sign_in: ^6.2.1
 
   # Animations
   flutter_animate: ^4.5.0
@@ -79,6 +83,10 @@ dependencies:
   # Text-to-speech (Soil Voice feature)
   flutter_tts: ^4.2.0
 
+
+dependency_overrides:
+  # objective_c 9.4.1 fixes the Windows path-with-spaces bug in its build hook
+  objective_c: ^9.4.1
 
 dev_dependencies:
   flutter_test:

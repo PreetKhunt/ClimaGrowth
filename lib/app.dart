@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/address_provider.dart';
 import 'providers/air_quality_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
@@ -32,10 +33,14 @@ import 'screens/smart_features_screen.dart';
 import 'screens/soil_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/weather_screen.dart';
+import 'screens/address_form_screen.dart';
+import 'screens/address_list_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/calculators_screen.dart';
+import 'screens/farm_map_screen.dart';
 import 'screens/ui_designer_screen.dart';
 import 'theme/dynamic_theme.dart';
+import 'utils/app_theme.dart';
 
 class ClimaGrowthApp extends StatelessWidget {
   const ClimaGrowthApp({super.key});
@@ -54,16 +59,17 @@ class ClimaGrowthApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => SettingsProvider()..loadFromCache()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => AddressProvider()),
         ChangeNotifierProvider(create: (_) => DynamicThemeProvider()),
       ],
-      child: Consumer2<SettingsProvider, DynamicThemeProvider>(
-        builder: (ctx, settings, dynamicTheme, _) {
+      child: Consumer<SettingsProvider>(
+        builder: (ctx, settings, _) {
           return MaterialApp(
             title: 'ClimaGrowth',
             debugShowCheckedModeBanner: false,
-            theme: dynamicTheme.data.toThemeData(Brightness.light),
-            darkTheme: dynamicTheme.data.toThemeData(Brightness.dark),
-            themeMode: settings.themeMode,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: ThemeMode.dark,
             initialRoute: '/',
             routes: {
               '/': (_) => const SplashScreen(),
@@ -91,6 +97,9 @@ class ClimaGrowthApp extends StatelessWidget {
               '/admin/dashboard': (_) => const AdminDashboardScreen(),
               '/checkout': (_) =>
                   const CheckoutScreen(items: [], totalAmount: 0),
+              '/farm-map': (_) => const FarmMapScreen(),
+              '/addresses': (_) => const AddressListScreen(),
+              '/address-form': (_) => const AddressFormScreen(),
               '/calculators': (_) => const CalculatorsScreen(),
               '/ui-designer': (_) => const UIDesignerScreen(),
             },

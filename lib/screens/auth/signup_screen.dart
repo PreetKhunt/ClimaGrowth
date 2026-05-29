@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
@@ -180,6 +182,16 @@ class _SignupScreenState extends State<SignupScreen> {
 
                   const SizedBox(height: 16),
 
+                  // ── Google Sign-In ─────────────────────────────────────────
+                  _SignupOrDivider().animate(delay: 250.ms).fadeIn(),
+                  const SizedBox(height: 12),
+                  _SignupGoogleButton(
+                    loading: auth.loading,
+                    onTap: _handleGoogleSignIn,
+                  ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
+
+                  const SizedBox(height: 16),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -207,6 +219,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Widget _buildCard(BuildContext context, {required List<Widget> children}) {
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(kPaddingLarge),
@@ -217,6 +230,12 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
     );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    HapticFeedback.mediumImpact();
+    final ok = await context.read<AuthProvider>().signInWithGoogle();
+    if (ok && mounted) Navigator.pushReplacementNamed(context, '/home');
   }
 
   Future<void> _submit() async {
@@ -234,5 +253,89 @@ class _SignupScreenState extends State<SignupScreen> {
     if (ok && mounted) {
       Navigator.pushReplacementNamed(context, '/home');
     }
+  }
+}
+
+class _SignupOrDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            'OR',
+            style: GoogleFonts.dmSans(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+}
+
+class _SignupGoogleButton extends StatelessWidget {
+  final bool loading;
+  final VoidCallback onTap;
+  const _SignupGoogleButton({required this.loading, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: loading ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: BorderSide(color: Colors.grey.shade300),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 22, height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF4285F4),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'G',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Continue with Google',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
   }
 }

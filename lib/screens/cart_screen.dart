@@ -8,6 +8,7 @@ import '../models/supply_product.dart';
 import '../providers/cart_provider.dart';
 import '../services/payment_service.dart';
 import '../utils/constants.dart';
+import 'checkout_screen.dart';
 import 'order_success_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -100,7 +101,6 @@ class _CartScreenState extends State<CartScreen> {
 
   void _handlePayNow() {
     final cart = Provider.of<CartProvider>(context, listen: false);
-    final user = FirebaseAuth.instance.currentUser;
 
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,14 +109,24 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
-    setState(() => _isProcessing = true);
+    final items = cart.items
+        .map((e) => {
+              'id': e.product.id,
+              'name': e.product.name,
+              'price': e.product.price,
+              'quantity': e.quantity,
+              'imageUrl': e.product.photoUrl,
+            })
+        .toList();
 
-    _paymentService.openCheckout(
-      amountInRupees: cart.totalPrice,
-      description: 'Order of ${cart.items.length} items',
-      customerName: user?.displayName ?? 'Farmer',
-      customerEmail: user?.email ?? 'test@climagrowth.com',
-      customerPhone: user?.phoneNumber ?? '9999999999',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CheckoutScreen(
+          items: items,
+          totalAmount: cart.totalPrice,
+        ),
+      ),
     );
   }
 

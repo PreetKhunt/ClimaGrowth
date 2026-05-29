@@ -5,6 +5,8 @@ import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
+import 'address_list_screen.dart';
+import 'farm_map_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -186,6 +188,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = auth.user;
     final menuItems = [
       (
+        'My Farm on Map',
+        'Mark & view farm location',
+        Icons.agriculture_outlined,
+        const Color(0xFF00FF88)
+      ),
+      (
+        'My Addresses',
+        'Manage delivery addresses',
+        Icons.location_on_outlined,
+        const Color(0xFF4CC9F0)
+      ),
+      (
         'My Farms',
         '3 farms registered',
         Icons.landscape_outlined,
@@ -261,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return MouseRegion(
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
-                onTap: () {},
+                onTap: () => _handleMenuTap(context, item.$1),
                 child: Container(
                   height: 64,
                   margin: const EdgeInsets.only(bottom: 10),
@@ -339,6 +353,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  void _handleMenuTap(BuildContext context, String label) {
+    switch (label) {
+      case 'My Farm on Map':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const FarmMapScreen()));
+        break;
+      case 'My Addresses':
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AddressListScreen()));
+        break;
+      default:
+        break;
+    }
   }
 
   void _showEditSheet(
