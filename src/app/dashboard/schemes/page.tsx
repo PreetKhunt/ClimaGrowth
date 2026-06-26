@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Landmark, FileText, CheckCircle2, ChevronRight, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,17 @@ const schemes = [
 ];
 
 export default function GovtSchemesPage() {
+  const [checkingId, setCheckingId] = useState<number | null>(null);
+  const [successId, setSuccessId] = useState<number | null>(null);
+
+  const handleCheckEligibility = (id: number) => {
+    setCheckingId(id);
+    setTimeout(() => {
+      setCheckingId(null);
+      setSuccessId(id);
+    }, 2500);
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex justify-between items-end">
@@ -58,7 +70,7 @@ export default function GovtSchemesPage() {
 
       <div className="grid gap-6">
         {schemes.map(scheme => (
-          <Card key={scheme.id} className="p-6 bg-card/40 border-white/5 group hover:bg-card/60 transition-all">
+          <Card key={scheme.id} className={`p-6 bg-card/40 border-white/5 group transition-all ${successId === scheme.id ? 'border-primary shadow-[0_0_15px_rgba(0,255,136,0.1)]' : 'hover:bg-card/60'}`}>
             <div className="flex flex-col md:flex-row gap-6">
               
               <div className="flex-1">
@@ -103,7 +115,30 @@ export default function GovtSchemesPage() {
                   </div>
                 </div>
                 
-                <Button className="w-full mt-6 gap-2" onClick={() => window.open('https://pmkisan.gov.in/', '_blank')}>Apply Online <ChevronRight size={16} /></Button>
+                <div className="mt-6 flex flex-col gap-2">
+                  {successId === scheme.id ? (
+                    <div className="w-full text-center p-2 bg-primary/20 text-primary font-bold rounded-lg flex items-center justify-center gap-2 text-sm border border-primary/30">
+                      <CheckCircle2 size={16} /> You are Eligible!
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-2 border-primary/50 text-primary hover:bg-primary/10"
+                      disabled={checkingId === scheme.id}
+                      onClick={() => handleCheckEligibility(scheme.id)}
+                    >
+                      {checkingId === scheme.id ? "Verifying Profile..." : "Verify Eligibility"}
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    className="w-full gap-2" 
+                    onClick={() => window.open('https://pmkisan.gov.in/', '_blank')}
+                    disabled={checkingId === scheme.id}
+                  >
+                    Apply Online <ChevronRight size={16} />
+                  </Button>
+                </div>
               </div>
 
             </div>

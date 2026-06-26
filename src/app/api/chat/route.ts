@@ -19,8 +19,13 @@ export async function POST(req: NextRequest) {
 
     // Format previous messages for Gemini context
     // Gemini expects an array of { role: 'user' | 'model', parts: [{ text: string }] }
-    // The last message is the current prompt.
-    const history = messages.slice(0, -1).map((msg: any) => ({
+    // The first message must be from the user. Our UI starts with an assistant greeting.
+    let rawHistory = messages.slice(0, -1);
+    if (rawHistory.length > 0 && rawHistory[0].role === "assistant") {
+      rawHistory = rawHistory.slice(1); // Remove the initial hardcoded greeting
+    }
+
+    const history = rawHistory.map((msg: any) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
