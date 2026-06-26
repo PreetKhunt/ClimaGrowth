@@ -13,14 +13,14 @@ const cropPrices = [
 ];
 
 const products = [
-  { id: 1, name: "Premium NPK Fertilizer 19:19:19", price: 1200, unit: "50kg bag", tag: "Best Seller" },
-  { id: 2, name: "Organic Neem Pesticide", price: 450, unit: "1L bottle", tag: "Organic" },
-  { id: 3, name: "High-Yield Wheat Seeds (HD-2967)", price: 900, unit: "40kg bag", tag: "Certified" },
-  { id: 4, name: "Urea (Nitrogen Fertilizer)", price: 266, unit: "45kg bag", tag: "Govt Subsidized" },
-  { id: 5, name: "Chlorpyrifos 20% EC Insecticide", price: 650, unit: "1L bottle", tag: "Pest Control" },
-  { id: 6, name: "DAP (Di-Ammonium Phosphate)", price: 1350, unit: "50kg bag", tag: "Essential" },
-  { id: 7, name: "Bio-fungicide Trichoderma", price: 300, unit: "1kg packet", tag: "Eco-Friendly" },
-  { id: 8, name: "Glyphosate 41% SL Herbicide", price: 550, unit: "1L bottle", tag: "Weed Control" },
+  { id: 1, name: "Premium NPK Fertilizer 19:19:19", price: 1200, unit: "50kg bag", tag: "Best Seller", image: "https://images.unsplash.com/photo-1627914691456-e9188d3d9b54?w=400&q=80" },
+  { id: 2, name: "Organic Neem Pesticide", price: 450, unit: "1L bottle", tag: "Organic", image: "https://images.unsplash.com/photo-1581007871115-f14bc016e0a4?w=400&q=80" },
+  { id: 3, name: "High-Yield Wheat Seeds (HD-2967)", price: 900, unit: "40kg bag", tag: "Certified", image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" },
+  { id: 4, name: "Urea (Nitrogen Fertilizer)", price: 266, unit: "45kg bag", tag: "Govt Subsidized", image: "https://images.unsplash.com/photo-1631481519782-bdf4ec7ec103?w=400&q=80" },
+  { id: 5, name: "Chlorpyrifos 20% EC Insecticide", price: 650, unit: "1L bottle", tag: "Pest Control", image: "https://images.unsplash.com/photo-1563514258-005fa7f01c70?w=400&q=80" },
+  { id: 6, name: "DAP (Di-Ammonium Phosphate)", price: 1350, unit: "50kg bag", tag: "Essential", image: "https://images.unsplash.com/photo-1627914691456-e9188d3d9b54?w=400&q=80" },
+  { id: 7, name: "Bio-fungicide Trichoderma", price: 300, unit: "1kg packet", tag: "Eco-Friendly", image: "https://images.unsplash.com/photo-1607590209511-df4091a13e21?w=400&q=80" },
+  { id: 8, name: "Glyphosate 41% SL Herbicide", price: 550, unit: "1L bottle", tag: "Weed Control", image: "https://images.unsplash.com/photo-1581007871115-f14bc016e0a4?w=400&q=80" },
 ];
 
 export default function MarketPage() {
@@ -41,13 +41,30 @@ export default function MarketPage() {
   const handlePayment = () => {
     if (cart.length === 0) return;
 
-    // Simulate payment processing for demo purposes to avoid Razorpay invalid key errors
-    setPaymentSuccess(true);
-    setCart([]);
-    setTimeout(() => {
-      setPaymentSuccess(false);
-      setIsCartOpen(false);
-    }, 3000);
+    const options = {
+      key: "rzp_test_T5LijCSPOvVxOT",
+      amount: totalAmount * 100, // Amount in paise
+      currency: "INR",
+      name: "ClimaGrowth",
+      description: "Agri-Commerce Purchase",
+      theme: { color: "#00FF88" },
+      handler: function (response: any) {
+        setPaymentSuccess(true);
+        setCart([]);
+        setTimeout(() => {
+          setPaymentSuccess(false);
+          setIsCartOpen(false);
+        }, 3000);
+      },
+      prefill: {
+        name: "Preet Farmer",
+        email: "preet@climagrowth.com",
+        contact: "9999999999",
+      },
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
   };
 
   return (
@@ -142,8 +159,12 @@ export default function MarketPage() {
         {products.map(product => (
           <Card key={product.id} className="bg-card/40 border-white/5 p-6 flex flex-col justify-between">
             <div>
-              <div className="w-full h-32 bg-white/5 rounded-lg mb-4 flex items-center justify-center text-white/20">
-                <Store size={40} />
+              <div className="w-full h-32 bg-white/5 rounded-lg mb-4 flex items-center justify-center text-white/20 overflow-hidden relative">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover mix-blend-overlay opacity-60 hover:opacity-100 transition-opacity" />
+                ) : (
+                  <Store size={40} />
+                )}
               </div>
               <div className="inline-block px-2 py-1 bg-white/10 rounded text-xs font-medium text-white/70 mb-2">{product.tag}</div>
               <h3 className="font-semibold text-lg leading-tight mb-2">{product.name}</h3>
