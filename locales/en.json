@@ -1,0 +1,12 @@
+{
+  "Index": {
+    "title": "Welcome to ClimaGrowth Web"
+  },
+  "Auth": {
+    "login": "Sign In",
+    "register": "Create Account",
+    "email": "Email Address",
+    "password": "Password",
+    "submit": "Submit"
+  }
+}
