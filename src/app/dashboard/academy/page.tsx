@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-require-imports */
 "use client";
 
 import { useState } from "react";

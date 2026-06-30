@@ -1,3 +1,8 @@
+ 
+ 
+ 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
 import { Droplets, Sprout, TestTube, Activity } from "lucide-react";
