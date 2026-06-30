@@ -1,0 +1,227 @@
+{
+  "tables": {
+    "audit_logs": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "action": "text",
+      "entity_type": "text",
+      "entity_id": "text",
+      "metadata": "jsonb",
+      "ip_address": "text",
+      "user_agent": "text",
+      "created_at": "timestamp with time zone"
+    },
+    "disease_scans": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "farm_id": "uuid",
+      "image_url": "text",
+      "disease_name": "text",
+      "confidence_score": "numeric",
+      "symptoms": "jsonb",
+      "cause": "text",
+      "treatment": "jsonb",
+      "recommended_fertilizers": "jsonb",
+      "recommended_pesticides": "jsonb",
+      "prevention_tips": "jsonb",
+      "created_at": "timestamp with time zone"
+    },
+    "farms": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "name": "text",
+      "health": "integer",
+      "status": "text",
+      "created_at": "timestamp with time zone",
+      "area_acres": "numeric",
+      "soil_type": "text",
+      "crop_type": "text",
+      "irrigation_type": "text",
+      "water_source": "text",
+      "coordinates": "jsonb",
+      "images": "ARRAY"
+    },
+    "irrigation_configs": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "farm_id": "uuid",
+      "moisture_threshold": "numeric",
+      "temperature_threshold": "numeric",
+      "rain_detection_enabled": "boolean",
+      "watering_schedule": "jsonb",
+      "emergency_watering_enabled": "boolean",
+      "pump_status": "text",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "learning_progress": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "course_id": "text",
+      "lesson_id": "text",
+      "status": "text",
+      "video_timestamp_seconds": "integer",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "notifications": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "type": "text",
+      "title": "text",
+      "message": "text",
+      "link": "text",
+      "is_read": "boolean",
+      "created_at": "timestamp with time zone"
+    },
+    "order_items": {
+      "id": "uuid",
+      "order_id": "uuid",
+      "product_id": "uuid",
+      "quantity": "integer",
+      "unit_price": "numeric",
+      "created_at": "timestamp with time zone"
+    },
+    "orders": {
+      "id": "uuid",
+      "buyer_id": "uuid",
+      "total_amount": "numeric",
+      "status": "text",
+      "shipping_address": "jsonb",
+      "payment_method": "text",
+      "razorpay_order_id": "text",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "post_comments": {
+      "id": "uuid",
+      "post_id": "uuid",
+      "author_id": "uuid",
+      "content": "text",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "post_likes": {
+      "post_id": "uuid",
+      "user_id": "uuid",
+      "created_at": "timestamp with time zone"
+    },
+    "posts": {
+      "id": "uuid",
+      "author_id": "uuid",
+      "content": "text",
+      "tags": "ARRAY",
+      "image_url": "text",
+      "likes": "integer",
+      "comments": "integer",
+      "is_expert": "boolean",
+      "created_at": "timestamp with time zone",
+      "comments_count": "integer",
+      "likes_count": "integer",
+      "images": "ARRAY"
+    },
+    "products": {
+      "id": "uuid",
+      "seller_id": "uuid",
+      "name": "text",
+      "category": "text",
+      "description": "text",
+      "price": "numeric",
+      "discount": "numeric",
+      "stock_quantity": "integer",
+      "images": "ARRAY",
+      "specifications": "jsonb",
+      "average_rating": "numeric",
+      "total_reviews": "integer",
+      "is_active": "boolean",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "profiles": {
+      "id": "uuid",
+      "full_name": "text",
+      "phone": "text",
+      "avatar_url": "text",
+      "created_at": "timestamp with time zone",
+      "role": "text",
+      "phone_number": "text",
+      "location": "text",
+      "preferences": "jsonb",
+      "user_id": "uuid"
+    },
+    "reviews": {
+      "id": "uuid",
+      "product_id": "uuid",
+      "user_id": "uuid",
+      "rating": "integer",
+      "comment": "text",
+      "created_at": "timestamp with time zone"
+    },
+    "transport_bookings": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "pickup_farm_id": "uuid",
+      "vehicle_type": "text",
+      "capacity_tons": "numeric",
+      "destination": "text",
+      "pickup_date": "date",
+      "pickup_time": "text",
+      "contact_number": "text",
+      "notes": "text",
+      "status": "text",
+      "receipt_url": "text",
+      "created_at": "timestamp with time zone",
+      "updated_at": "timestamp with time zone"
+    },
+    "yield_predictions": {
+      "id": "uuid",
+      "user_id": "uuid",
+      "farm_id": "uuid",
+      "expected_yield_tons": "numeric",
+      "estimated_profit": "numeric",
+      "risk_level": "text",
+      "recommended_improvements": "jsonb",
+      "ai_explanation": "text",
+      "weather_snapshot": "jsonb",
+      "soil_data_snapshot": "jsonb",
+      "created_at": "timestamp with time zone"
+    }
+  },
+  "buckets": [
+    {
+      "id": "disease-images",
+      "name": "disease-images",
+      "public": true
+    },
+    {
+      "id": "farm-images",
+      "name": "farm-images",
+      "public": true
+    },
+    {
+      "id": "community-images",
+      "name": "community-images",
+      "public": true
+    },
+    {
+      "id": "avatars",
+      "name": "avatars",
+      "public": true
+    },
+    {
+      "id": "product-images",
+      "name": "product-images",
+      "public": true
+    },
+    {
+      "id": "tax-reports",
+      "name": "tax-reports",
+      "public": false
+    },
+    {
+      "id": "learning-files",
+      "name": "learning-files",
+      "public": false
+    }
+  ]
+}

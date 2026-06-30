@@ -1,31 +1,102 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
-import { MessageSquare, Heart, Share2, Users, Flame, Plus, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MessageSquare, Heart, Share2, Users, Flame, Plus, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { createPost, likePost, deletePost, fetchPosts } from "@/actions/community-actions";
 
 export default function CommunityPage() {
   const supabase = createClient();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadPosts() {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*, author:profiles(full_name, avatar_url, phone)')
-        .order('created_at', { ascending: false });
-        
-      if (!error && data) {
-        setPosts(data);
-      }
-      setLoading(false);
+  const [content, setContent] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadPosts = async () => {
+    setLoading(true);
+    const res = await fetchPosts();
+    if (res.success && res.data) {
+      setPosts(res.data);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     loadPosts();
-  }, [supabase]);
+  }, []);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!content.trim() && !image) return;
+    
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('content', content);
+      if (image) {
+        formData.append('image', image);
+      }
+      
+      const res = await createPost(formData);
+      if (!res.success) throw new Error(res.error);
+      
+      setContent("");
+      removeImage();
+      await loadPosts();
+    } catch (err: any) {
+      alert(err.message || 'Failed to create post');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      // Optimistic update
+      setPosts(posts.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
+      await likePost(postId);
+    } catch (err) {
+      console.error(err);
+      await loadPosts(); // revert on fail
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+      await deletePost(postId);
+      await loadPosts();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete post');
+    }
+  };
+
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
       <div className="flex justify-between items-end">
@@ -43,16 +114,41 @@ export default function CommunityPage() {
           
           {/* Create Post Card */}
           <Card className="p-4 bg-card/40 border-white/5 flex gap-4">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Me" alt="You" className="w-10 h-10 rounded-full bg-white/5" />
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Me" alt="You" className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
             <div className="flex-1">
-              <input type="text" placeholder="Share an update or ask a question..." className="w-full bg-transparent border-none focus:outline-none text-white text-sm mt-2" />
+              <textarea 
+                placeholder="Share an update or ask a question..." 
+                className="w-full bg-transparent border-none focus:outline-none text-white text-sm mt-2 resize-none min-h-[40px]"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+              
+              {imagePreview && (
+                <div className="relative mt-2 mb-2 w-32 h-32 rounded-md overflow-hidden border border-white/10">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button onClick={removeImage} className="absolute top-1 right-1 bg-black/50 rounded-full p-1 hover:bg-black text-white">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
               <div className="w-full h-px bg-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white h-8 px-2 text-xs">📷 Photo</Button>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white h-8 px-2 text-xs">📍 Location</Button>
+                  <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageSelect} />
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white h-8 px-2 text-xs" onClick={() => fileInputRef.current?.click()}>
+                    <ImageIcon size={14} className="mr-1" /> Photo
+                  </Button>
                 </div>
-                <Button size="sm" className="h-8 bg-primary text-primary-foreground">Post</Button>
+                <Button 
+                  size="sm" 
+                  className="h-8 bg-primary text-primary-foreground" 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || (!content.trim() && !image)}
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
+                  Post
+                </Button>
               </div>
             </div>
           </Card>
@@ -79,11 +175,11 @@ export default function CommunityPage() {
                 </div>
               </div>
               
-              <p className="text-sm text-white/90 mb-4 leading-relaxed">{post.content}</p>
+              <p className="text-sm text-white/90 mb-4 leading-relaxed whitespace-pre-wrap">{post.content}</p>
               
-              {post.image_url && (
+              {post.images && post.images.length > 0 && (
                 <div className="rounded-xl overflow-hidden mb-4 border border-white/5">
-                  <img src={post.image_url} alt="Post Attachment" className="w-full h-64 object-cover" />
+                  <img src={post.images[0]} alt="Post Attachment" className="w-full h-64 object-cover" />
                 </div>
               )}
               
@@ -97,16 +193,21 @@ export default function CommunityPage() {
               
               <div className="flex justify-between items-center text-muted-foreground">
                 <div className="flex gap-6">
-                  <button className="flex items-center gap-2 text-sm hover:text-rose-400 transition-colors">
-                    <Heart size={18} /> {post.likes || 0}
+                  <button onClick={() => handleLike(post.id)} className="flex items-center gap-2 text-sm hover:text-rose-400 transition-colors">
+                    <Heart size={18} /> {post.likes_count || 0}
                   </button>
                   <button className="flex items-center gap-2 text-sm hover:text-white transition-colors">
-                    <MessageSquare size={18} /> {post.comments || 0}
+                    <MessageSquare size={18} /> {post.comments_count || 0}
                   </button>
                 </div>
-                <button className="flex items-center gap-2 text-sm hover:text-white transition-colors">
-                  <Share2 size={18} /> Share
-                </button>
+                <div className="flex gap-4">
+                  <button onClick={() => handleDelete(post.id)} className="flex items-center gap-2 text-sm text-red-400/70 hover:text-red-400 transition-colors">
+                    <X size={16} /> Delete
+                  </button>
+                  <button className="flex items-center gap-2 text-sm hover:text-white transition-colors">
+                    <Share2 size={18} /> Share
+                  </button>
+                </div>
               </div>
             </Card>
           ))}

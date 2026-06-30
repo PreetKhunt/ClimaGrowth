@@ -27,22 +27,42 @@ export default function DiseaseDetectionPage() {
     }
   };
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (!file) return;
     setIsScanning(true);
     
-    // Mock AI Scanning delay
-    setTimeout(() => {
-      setIsScanning(false);
-      setResult({
-        disease: "Cotton Leaf Curl Virus (CLCuV)",
-        confidence: 94.5,
-        symptoms: ["Upward/downward curling of leaves", "Thickened veins", "Stunted growth"],
-        causes: "Transmitted primarily by the whitefly (Bemisia tabaci).",
-        treatment: "Spray Neem Seed Kernel Extract (NSKE) 5% or Imidacloprid 17.8 SL @ 0.5 ml/litre of water.",
-        expert: "Dr. Ramesh Patel (Agri-Clinic, 4.2km away)",
+    try {
+      // Import dynamically to avoid SSR issues if needed, or rely on top level
+      const { StorageService } = await import('@/lib/services/storage');
+      const { analyzeDisease } = await import('@/actions/disease-actions');
+
+      // 1. Upload to Supabase Storage
+      const publicUrl = await StorageService.uploadFile({
+        bucket: 'disease-images',
+        file: file,
       });
-    }, 3000);
+
+      // 2. Call Server Action to Analyze
+      const response = await analyzeDisease(publicUrl);
+      
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      setResult({
+        disease: response.data.disease_name,
+        confidence: Math.round(response.data.confidence_score * 100),
+        symptoms: response.data.symptoms || [],
+        causes: response.data.cause,
+        treatment: response.data.treatment,
+        expert: "Dr. Ramesh Patel (Agri-Clinic, 4.2km away)", // Mock expert finding
+      });
+    } catch (err: any) {
+      alert(err.message || 'Analysis failed');
+      setResult(null);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   return (

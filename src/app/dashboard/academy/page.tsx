@@ -4,9 +4,10 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, PlayCircle, Award, Star, Clock, CheckCircle, X, ChevronRight } from "lucide-react";
+import { CheckCircle, X, ChevronRight, CheckSquare, Square, Loader2, PlayCircle, Clock, Star, Award, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { updateLearningProgress } from "@/actions/academy-actions";
 
 const courses = [
   {
@@ -17,7 +18,8 @@ const courses = [
     duration: "2h 45m",
     rating: 4.8,
     progress: 100,
-    thumbnail: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80"
+    thumbnail: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80",
+    youtubeId: "78T3w7Yy-lY" // Example drip irrigation video
   },
   {
     id: 2,
@@ -27,7 +29,8 @@ const courses = [
     duration: "1h 15m",
     rating: 4.9,
     progress: 35,
-    thumbnail: "https://images.unsplash.com/photo-1595804369792-74d306b3fa1d?w=800&q=80"
+    thumbnail: "https://images.unsplash.com/photo-1595804369792-74d306b3fa1d?w=800&q=80",
+    youtubeId: "2-dO2F-a-0o" // Example organic farming video
   },
   {
     id: 3,
@@ -37,12 +40,53 @@ const courses = [
     duration: "45m",
     rating: 4.5,
     progress: 0,
-    thumbnail: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&q=80"
+    thumbnail: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=800&q=80",
+    youtubeId: "rN9j164qO4k" // Example govt scheme video
   }
 ];
 
 export default function AcademyPage() {
   const [activeVideo, setActiveVideo] = useState<any>(null);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+
+  const handleTaskToggle = (task: string) => {
+    if (completedTasks.includes(task)) {
+      setCompletedTasks(completedTasks.filter(t => t !== task));
+    } else {
+      setCompletedTasks([...completedTasks, task]);
+    }
+  };
+
+  const markCompleted = async () => {
+    if (!activeVideo) return;
+    setIsSaving(true);
+    try {
+      const res = await updateLearningProgress({
+        course_id: activeVideo.id.toString(),
+        lesson_id: "lesson_1",
+        status: 'completed',
+        video_timestamp_seconds: 0
+      });
+      if (!res.success) throw new Error(res.error);
+      
+      alert("Lesson marked as complete!");
+      setActiveVideo(null);
+      setCompletedTasks([]);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || "Failed to save progress.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const tasks = [
+    "Watch the complete video introduction",
+    "Review the setup checklist",
+    "Complete the final quiz"
+  ];
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -55,39 +99,82 @@ export default function AcademyPage() {
                 <X size={24} />
               </Button>
             </div>
-            <div className="aspect-video bg-black relative flex items-center justify-center">
-              {/* Mock Video Player */}
-              <img src={activeVideo.thumbnail} alt={activeVideo.title} className="absolute inset-0 w-full h-full object-cover opacity-40" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/40 transition-colors border border-primary/50 group">
-                  <PlayCircle size={40} className="text-primary group-hover:scale-110 transition-transform" />
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                <div className="w-full h-1 bg-white/20 rounded-full mb-4">
-                  <div className="w-1/3 h-full bg-primary rounded-full relative">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow" />
+            <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
+              {activeVideo.youtubeId && !videoError ? (
+                <iframe 
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&mute=0`} 
+                  title={activeVideo.title} 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                  onError={() => {
+                    setVideoError(true);
+                    window.open(`https://www.youtube.com/watch?v=${activeVideo.youtubeId}`, '_blank');
+                  }}
+                ></iframe>
+              ) : (
+                <>
+                  <img src={activeVideo.thumbnail} alt={activeVideo.title} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  <div className="absolute inset-0 flex items-center justify-center flex-col gap-4">
+                    <p className="text-white font-medium">Video could not be embedded automatically.</p>
+                    <Button 
+                      onClick={() => window.open(`https://www.youtube.com/watch?v=${activeVideo.youtubeId}`, '_blank')}
+                      className="bg-amber-500 hover:bg-amber-600 text-black"
+                    >
+                      <PlayCircle className="mr-2" /> Open in YouTube
+                    </Button>
                   </div>
-                </div>
-                <div className="flex justify-between text-xs font-medium text-white/70">
-                  <span>14:20 / {activeVideo.duration}</span>
-                  <div className="flex gap-4">
-                    <span className="cursor-pointer hover:text-white">CC</span>
-                    <span className="cursor-pointer hover:text-white">1080p</span>
-                    <span className="cursor-pointer hover:text-white">Fullscreen</span>
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
-            <div className="p-6 bg-card/50 flex justify-between items-center">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Instructor: {activeVideo.instructor}</p>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">{activeVideo.level}</span>
-                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1"><Star size={14} className="fill-amber-400" /> {activeVideo.rating}</span>
+            
+            {activeVideo.youtubeId && (
+              <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-2 flex justify-between items-center text-sm">
+                <span className="text-amber-200">If the video isn't playing properly, you can watch it directly on YouTube.</span>
+                <a 
+                  href={`https://www.youtube.com/watch?v=${activeVideo.youtubeId}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-amber-400 font-bold hover:underline flex items-center gap-1"
+                >
+                  Open in YouTube <PlayCircle size={14} />
+                </a>
+              </div>
+            )}
+            <div className="p-6 bg-card/50">
+              <div className="mb-6">
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">Lesson Tasks</h3>
+                <div className="space-y-3">
+                  {tasks.map((task, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${completedTasks.includes(task) ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-black/20 border-white/10 hover:border-white/30'}`}
+                      onClick={() => handleTaskToggle(task)}
+                    >
+                      {completedTasks.includes(task) ? <CheckSquare className="text-primary" /> : <Square className="text-muted-foreground" />}
+                      <span className={completedTasks.includes(task) ? 'line-through opacity-70' : ''}>{task}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <Button className="gap-2 bg-primary text-primary-foreground"><CheckCircle size={16} /> Mark as Completed</Button>
+              <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Instructor: {activeVideo.instructor}</p>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">{activeVideo.level}</span>
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-1"><Star size={14} className="fill-amber-400" /> {activeVideo.rating}</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={markCompleted}
+                  disabled={isSaving || completedTasks.length < tasks.length}
+                  className="gap-2 bg-primary text-primary-foreground disabled:bg-primary/30"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle size={16} />} 
+                  Mark as Completed
+                </Button>
+              </div>
             </div>
           </div>
         </div>

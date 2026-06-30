@@ -166,7 +166,7 @@ export default function MarketPage() {
             <div>
               <div className="w-full h-32 bg-white/5 rounded-lg mb-4 flex items-center justify-center text-white/20 overflow-hidden relative">
                 {product.image ? (
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover mix-blend-overlay opacity-60 hover:opacity-100 transition-opacity" />
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform hover:scale-105" />
                 ) : (
                   <Store size={40} />
                 )}
