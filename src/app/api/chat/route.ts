@@ -15,7 +15,12 @@ export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: `You are Gemini, an expert agricultural AI assistant for ClimaGrowth. 
+You provide precise, scientific advice on crops, fertilizers, minerals, and farm management. 
+Keep answers concise, actionable, and formatted nicely. Assume the user is a farmer looking to maximize yield.`
+    });
 
     // Format previous messages for Gemini context
     // Gemini expects an array of { role: 'user' | 'model', parts: [{ text: string }] }
@@ -33,10 +38,7 @@ export async function POST(req: NextRequest) {
     const currentMessage = messages[messages.length - 1].content;
 
     const chat = model.startChat({
-      history,
-      systemInstruction: `You are Gemini, an expert agricultural AI assistant for ClimaGrowth. 
-You provide precise, scientific advice on crops, fertilizers, minerals, and farm management. 
-Keep answers concise, actionable, and formatted nicely. Assume the user is a farmer looking to maximize yield.`,
+      history
     });
 
     const result = await chat.sendMessage(currentMessage);
