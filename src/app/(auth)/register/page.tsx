@@ -3,44 +3,38 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { register } from '@/actions/auth-actions';
 
 export default function RegisterPage() {
   const t = useTranslations('Auth');
   const router = useRouter();
-  const supabase = createClient();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     
-    // 1. Sign up the user
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-        },
-        emailRedirectTo: `${location.origin}/api/auth/callback`,
+    try {
+      const formData = new FormData(e.currentTarget);
+      const result = await register(formData);
+
+      if (result?.error) {
+        toast.error(result.error);
+      } else if (result?.success) {
+        toast.success(result.success);
+        router.push('/login');
       }
-    });
-
-    if (error) {
-      toast.error(error.message);
+    } catch (err: any) {
+      toast.error(err?.message || "An unexpected error occurred");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    toast.success('Registration successful! Please check your email to verify your account.');
-    router.push('/login');
   };
 
   return (
@@ -60,6 +54,7 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium mb-1.5 text-white/80">Full Name</label>
             <input 
+              name="name"
               type="text" 
               required 
               value={name}
@@ -71,6 +66,7 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium mb-1.5 text-white/80">{t('email')}</label>
             <input 
+              name="email"
               type="email" 
               required 
               value={email}
@@ -82,6 +78,7 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium mb-1.5 text-white/80">{t('password')}</label>
             <input 
+              name="password"
               type="password" 
               required 
               value={password}

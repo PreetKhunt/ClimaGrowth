@@ -5,36 +5,36 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { login } from '@/actions/auth-actions';
 
 export default function LoginPage() {
   const t = useTranslations('Auth');
-  const router = useRouter();
-  const supabase = createClient();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const formData = new FormData(e.currentTarget);
+      const result = await login(formData);
 
-    if (error) {
-      toast.error(error.message);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        // Redirection happens in the server action, but just in case:
+        toast.success('Successfully logged in');
+      }
+    } catch (err: any) {
+      console.error("Login exception:", err);
+      toast.error(err?.message || "An unexpected error occurred");
+    } finally {
       setLoading(false);
-    } else {
-      toast.success('Successfully logged in');
-      router.push('/dashboard');
-      router.refresh();
     }
   };
 
@@ -55,6 +55,7 @@ export default function LoginPage() {
           <div>
             <label className="block text-sm font-medium mb-1.5 text-white/80">{t('email')}</label>
             <input 
+              name="email"
               type="email" 
               required 
               value={email}
@@ -69,6 +70,7 @@ export default function LoginPage() {
               <a href="/forgot-password" className="text-xs text-primary hover:underline">Forgot Password?</a>
             </div>
             <input 
+              name="password"
               type="password" 
               required 
               value={password}
