@@ -43,33 +43,76 @@ export default function MarketPage() {
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (cart.length === 0) return;
 
-    const options = {
-      key: "rzp_test_T5LijCSPOvVxOT",
-      amount: totalAmount * 100, // Amount in paise
-      currency: "INR",
-      name: "ClimaGrowth",
-      description: "Agri-Commerce Purchase",
-      theme: { color: "#00FF88" },
-      handler: function (response: any) {
-        setPaymentSuccess(true);
-        setCart([]);
-        setTimeout(() => {
-          setPaymentSuccess(false);
-          setIsCartOpen(false);
-        }, 3000);
-      },
-      prefill: {
-        name: "Preet Farmer",
-        email: "preet@climagrowth.com",
-        contact: "9999999999",
-      },
-    };
+    try {
+      // 1. Create order on the server
+      const res = await fetch('/api/razorpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: totalAmount }),
+      });
+      const order = await res.json();
 
-    const rzp = new (window as any).Razorpay(options);
-    rzp.open();
+      if (!order.id) {
+        throw new Error("Failed to create order");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_T93BIkzoKFfaUG",
+        amount: totalAmount * 100, // Amount in paise
+        currency: "INR",
+        name: "ClimaGrowth",
+        description: "Agri-Commerce Purchase",
+        order_id: order.id, // Pass the generated order ID
+        theme: { color: "#00FF88" },
+        handler: async function (response: any) {
+          try {
+            // 2. Verify signature on the server
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.success) {
+              setPaymentSuccess(true);
+              setCart([]);
+              setTimeout(() => {
+                setPaymentSuccess(false);
+                setIsCartOpen(false);
+              }, 3000);
+            } else {
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Error verifying payment.");
+          }
+        },
+        prefill: {
+          name: "Preet Farmer",
+          email: "preet@climagrowth.com",
+          contact: "9999999999",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        alert("Payment Failed. Reason: " + response.error.description);
+      });
+      rzp.open();
+    } catch (error) {
+      console.error(error);
+      alert("Error initiating payment.");
+    }
   };
 
   return (
