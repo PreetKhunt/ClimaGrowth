@@ -1,28 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { resetPassword } from '@/actions/auth-actions';
+import { updatePassword } from '@/actions/auth-actions';
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+export default function UpdatePasswordPage() {
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const t = useTranslations('Auth');
+  const router = useRouter();
 
-  const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     
     try {
       const formData = new FormData(e.currentTarget);
-      const result = await resetPassword(formData);
+      const result = await updatePassword(formData);
 
       if (result?.error) {
         toast.error(result.error);
       } else if (result?.success) {
         toast.success(result.success);
+        router.push('/dashboard');
       }
     } catch (err: any) {
       toast.error(err?.message || "An unexpected error occurred");
@@ -37,20 +38,21 @@ export default function ForgotPasswordPage() {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div className="max-w-md w-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative z-10">
-        <h1 className="text-2xl font-semibold mb-4 text-white">Reset Password</h1>
-        <p className="text-muted-foreground text-sm mb-6">Enter your email address and we will send you a link to reset your password.</p>
+        <h1 className="text-2xl font-semibold mb-4 text-white">Set New Password</h1>
+        <p className="text-muted-foreground text-sm mb-6">Enter your new password below to secure your account.</p>
         
-        <form className="space-y-4" onSubmit={handleReset}>
+        <form className="space-y-4" onSubmit={handleUpdate}>
           <div>
-            <label className="block text-sm font-medium mb-1.5 text-white/80">{t('email')}</label>
+            <label className="block text-sm font-medium mb-1.5 text-white/80">New Password</label>
             <input 
-              name="email"
-              type="email" 
+              name="password"
+              type="password" 
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-white/10 rounded-lg px-4 py-3 text-sm bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary text-white" 
-              placeholder="Enter your email"
+              placeholder="••••••••"
             />
           </div>
           
@@ -60,13 +62,9 @@ export default function ForgotPasswordPage() {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg font-bold transition-all disabled:opacity-50 flex justify-center items-center gap-2"
           >
             {loading && <Loader2 className="animate-spin w-4 h-4" />}
-            {loading ? 'Sending link...' : 'Send Reset Link'}
+            {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
-        
-        <div className="mt-6 text-center text-sm">
-          <a href="/login" className="text-primary hover:underline">Back to login</a>
-        </div>
       </div>
     </div>
   );

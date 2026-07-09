@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, CloudRain, Sprout, ShoppingCart, 
   Settings, User, MessageSquare, Wrench, FileText,
-  Map, Droplets, PieChart, Users, BookOpen, ShieldCheck, Warehouse, Landmark
+  Map, Droplets, PieChart, Users, BookOpen, ShieldCheck, Warehouse, Landmark, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logout } from "@/actions/auth-actions";
 
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard, category: "Main" },
@@ -79,15 +80,17 @@ export function DashboardSidebar() {
       </div>
       
       <div className="p-4 border-t border-white/5">
-        <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5 cursor-pointer hover:bg-white/10 transition">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-            PF
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium leading-none mb-1">Preet Farmer</span>
-            <span className="text-xs text-muted-foreground leading-none">Free Plan</span>
-          </div>
-        </div>
+        <form action={logout}>
+          <button type="submit" className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/5 cursor-pointer hover:bg-white/10 transition text-left">
+            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-bold shrink-0">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium leading-none mb-1 text-white">Sign Out</span>
+              <span className="text-xs text-muted-foreground leading-none">End your session</span>
+            </div>
+          </button>
+        </form>
       </div>
     </aside>
   );
