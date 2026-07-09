@@ -22,8 +22,7 @@ export async function login(formData: FormData) {
     return { error: error.message };
   }
 
-  // Redirect on successful login
-  redirect('/dashboard');
+  return { success: true };
 }
 
 export async function register(formData: FormData) {

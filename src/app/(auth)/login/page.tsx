@@ -5,12 +5,14 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { login } from '@/actions/auth-actions';
 
 export default function LoginPage() {
   const t = useTranslations('Auth');
+  const router = useRouter();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,9 +28,10 @@ export default function LoginPage() {
 
       if (result?.error) {
         toast.error(result.error);
-      } else {
-        // Redirection happens in the server action, but just in case:
+      } else if (result?.success) {
         toast.success('Successfully logged in');
+        router.push('/dashboard');
+        router.refresh();
       }
     } catch (err: any) {
       console.error("Login exception:", err);
