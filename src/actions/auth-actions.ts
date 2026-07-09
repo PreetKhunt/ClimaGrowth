@@ -50,25 +50,7 @@ export async function register(formData: FormData) {
     return { error: error.message };
   }
 
-  if (data.user) {
-    // Automatically create profile on successful registration
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: data.user.id,
-        full_name: fullName,
-        email: email,
-        role: 'Farmer',
-        avatar_url: null,
-      });
-
-    if (profileError) {
-      console.error("Failed to create profile:", profileError);
-      // We still return success for auth, but profile creation failed
-    }
-  }
-
-  return { success: 'Registration successful! Please check your email to verify your account.' };
+  return { success: 'Registration successful! You can now log in.' };
 }
 
 export async function logout() {
@@ -83,7 +65,7 @@ export async function resetPassword(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/update-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://climagrowth.netlify.app'}/update-password`,
   });
 
   if (error) return { error: error.message };
